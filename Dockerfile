@@ -1,5 +1,7 @@
 FROM python:3-alpine3.15
 
+ENV PYTHONUNBUFFERED=1
+
 # Install dependencies needed to build psycopg2
 RUN apk update && apk add --no-cache \
     postgresql-dev \
