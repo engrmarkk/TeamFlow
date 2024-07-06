@@ -4,16 +4,15 @@ from flask_jwt_extended import create_access_token
 import re
 from random import randint, choice
 import string
+import datetime
 
 
-def return_response(status_code, status=None, message=None, data=None):
+def return_response(status_code, status=None, message=None, **data):
     res_data = {
         "status": status,
         "message": message,
     }
-
-    if data:
-        res_data["data"] = data
+    res_data.update(data)
 
     return jsonify(res_data), status_code
 
@@ -23,7 +22,7 @@ def gen_uuid():
 
 
 def return_access_token(user):
-    return create_access_token(identity=user)
+    return create_access_token(identity=user.id, expires_delta=datetime.timedelta(days=1))
 
 
 def is_valid_email(email):
