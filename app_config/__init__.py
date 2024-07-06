@@ -1,5 +1,5 @@
 from config import config_obj
-from endpoints import auth as authentication_blueprint
+from endpoints import auth as authentication_blueprint, account as account_blueprint
 from flask import Flask
 from extensions import db, migrate, jwt, cors
 from http_status import HttpStatus
@@ -20,13 +20,18 @@ def create_app(config_name='development'):
     @app.errorhandler(404)
     def not_found(error):
         return return_response(HttpStatus.NOT_FOUND, status=StatusRes.FAILED,
-                               message="Not Found", data={})
+                               message="Not Found")
 
     # handle 500
     @app.errorhandler(500)
     def server_error(error):
         return return_response(HttpStatus.INTERNAL_SERVER_ERROR, status=StatusRes.FAILED,
-                               message="Network Error", data={})
+                               message="Network Error")
+
+    @app.errorhandler(405)
+    def method_not_allowed(error):
+        return return_response(HttpStatus.METHOD_NOT_ALLOWED, status=StatusRes.FAILED,
+                               message="Method Not Allowed")
 
     # function tha returns the current user
     @jwt.user_identity_loader
@@ -56,6 +61,7 @@ def create_app(config_name='development'):
 
     # register blueprints
     app.register_blueprint(authentication_blueprint, url_prefix='/api/v1')
+    app.register_blueprint(account_blueprint, url_prefix='/api/v1')
 
     # load
     return app
