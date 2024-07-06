@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from utils import return_response, return_access_token
+from utils import return_response, return_access_token, is_valid_email, validate_password
 from http_status import HttpStatus
 from status_res import StatusRes
 from models import (authenticate,
@@ -27,6 +27,8 @@ def login():
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
+
+        print(email, password)
 
         if not email or not password:
             return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
@@ -69,6 +71,15 @@ def register():
 
         username = username.lower()
         email = email.lower()
+
+        if not is_valid_email(email):
+            return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
+                                   message="Invalid Email", data={})
+
+        val_pass = validate_password(password)
+        if val_pass:
+            return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
+                                   message=val_pass, data={})
 
         if username_exist(username):
             return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
