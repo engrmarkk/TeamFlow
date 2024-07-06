@@ -124,3 +124,11 @@ def update_password(user, password):
     user.update()
 
     return user
+
+
+def current_user_info(user):
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email
+    }
