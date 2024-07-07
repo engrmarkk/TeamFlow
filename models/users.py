@@ -9,9 +9,11 @@ class Users(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.String(50), primary_key=True, default=gen_uuid)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.Text, nullable=False)
     date_joined = db.Column(db.DateTime, default=datetime.now())
     email_verified = db.Column(db.Boolean, default=False)
     projects = relationship('Projects', secondary='users_project', back_populates='users')
@@ -74,8 +76,8 @@ def username_exist(username):
     return False
 
 
-def create_user(username, email, password):
-    user = Users(username=username, email=email, password=hasher.hash(password))
+def create_user(first_name, last_name, username, email, password):
+    user = Users(first_name=first_name, last_name=last_name, username=username, email=email, password=hasher.hash(password))
     user.save()
     return user
 
@@ -129,6 +131,8 @@ def update_password(user, password):
 def current_user_info(user):
     return {
         "id": user.id,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
         "username": user.username,
         "email": user.email
     }
