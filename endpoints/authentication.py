@@ -51,9 +51,19 @@ def login():
 def register():
     try:
         data = request.get_json()
+        first_name = data.get('first_name')
+        last_name = data.get('last_name')
         username = data.get('username')
         email = data.get('email')
         password = data.get('password')
+
+        if not first_name:
+            return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
+                                   message="First Name is required")
+
+        if not last_name:
+            return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
+                                   message="Last Name is required")
 
         if not username:
             return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
@@ -69,6 +79,8 @@ def register():
 
         username = username.lower()
         email = email.lower()
+        first_name = first_name.lower()
+        last_name = last_name.lower()
 
         if not is_valid_email(email):
             return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
@@ -86,7 +98,7 @@ def register():
         if email_exist(email):
             return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
                                    message="Email already exists")
-        user = create_user(username, email, password)
+        user = create_user(first_name, last_name, username, email, password)
         usersession = create_otp(user.id)
         otp = usersession.otp
         print(otp, "otp")
