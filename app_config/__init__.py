@@ -6,6 +6,7 @@ from http_status import HttpStatus
 from utils import return_response
 from status_res import StatusRes
 from models import Users, user_project, Projects, Messages, Notifications, Documents, Tasks
+from celery_config import make_celery
 
 
 def create_app(config_name='development'):
@@ -15,6 +16,7 @@ def create_app(config_name='development'):
     migrate.init_app(app, db)
     jwt.init_app(app)
     cors.init_app(app)
+    celery = make_celery(app)
 
     # handle 404
     @app.errorhandler(404)
@@ -64,4 +66,4 @@ def create_app(config_name='development'):
     app.register_blueprint(account_blueprint, url_prefix='/api/v1')
 
     # load
-    return app
+    return app, celery

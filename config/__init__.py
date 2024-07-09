@@ -19,6 +19,8 @@ class DevelopmentConfig(Config):
     # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(base_dir, 'teamflow.sqlite')
     SQLALCHEMY_DATABASE_URI = uri
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    CELERY_RESULT_BACKEND = f"redis://redis:{os.getenv('REDIS_PORT')}/0"
+    CELERY_BROKER_URL = f"redis://redis:{os.getenv('REDIS_PORT')}/0"
 
 
 config_obj = {
