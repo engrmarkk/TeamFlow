@@ -136,8 +136,6 @@ def verify_email():
             if user.usersession.otp_expiry < datetime.now():
                 return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
                                        message="OTP expired")
-            user.usersession.otp = None
-            user.usersession.otp_expiry = None
             user.email_verified = True
             user.update()
             return return_response(HttpStatus.OK, status=StatusRes.SUCCESS,
@@ -163,6 +161,9 @@ def resend_otp():
         if not user:
             return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
                                    message="User not found")
+        if user.email_verified:
+            return return_response(HttpStatus.BAD_REQUEST, status=StatusRes.FAILED,
+                                   message="Email already verified")
         usersession = create_otp(user.id)
         print(usersession.otp, "otp")
         # send mail to the user
