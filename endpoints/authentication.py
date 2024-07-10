@@ -8,7 +8,6 @@ from models import (authenticate,
                     get_user_by_email, create_reset_p,
                     get_user_by_reset_p, update_password)
 from datetime import datetime
-from task import add_numbers
 
 auth = Blueprint('auth', __name__)
 
@@ -17,7 +16,8 @@ AUTH_PREFIX = 'auth'
 
 @auth.route('/')
 def test_endpoint():
-    add_numbers.delay(1, 2)
+    from celery_config.utils.cel_workers import send_mail
+    send_mail.delay()
     return return_response(HttpStatus.OK, status=StatusRes.SUCCESS, message="Welcome to TeamFlow")
 
 
