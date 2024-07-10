@@ -1,4 +1,4 @@
-FROM python:3-alpine3.15
+FROM python:3.8-alpine3.15
 
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=runserver.py
@@ -8,7 +8,9 @@ RUN apk update && apk add --no-cache \
     postgresql-dev \
     gcc \
     python3-dev \
-    musl-dev
+    musl-dev \
+    tzdata \
+    libc-dev
 
 WORKDIR /app
 COPY . /app
