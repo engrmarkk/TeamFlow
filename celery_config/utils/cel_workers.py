@@ -5,6 +5,7 @@ from celery import Celery
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import os
 
 app = create_app()
 
@@ -34,29 +35,33 @@ celery = make_celery()
 
 
 @celery.task
-def send_mail():
-    print("Sending Mail")
-    smtp_host = 'smtp.gmail.com'
-    smtp_port = 587
-    smtp_user = 'easytransact.send@gmail.com'
-    smtp_password = 'zkfvuazbihvpwvip'
+def send_mail(email):
+    try:
+        print("Sending Mail")
+        smtp_host = 'smtp.gmail.com'
+        smtp_port = 587
+        smtp_user = os.environ.get('EMAIL_USER')
+        smtp_password = os.environ.get('EMAIL_PASSWORD')
 
-    server = smtplib.SMTP(smtp_host, smtp_port)
-    server.starttls()
-    server.login(smtp_user, smtp_password)
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
 
-    from_email = 'easytransact.send@gmail.com'
-    to_email = 'adeniyiboladale@yahoo.com'
-    subject = 'Celery Test'
-    body = 'This is a test email sent from Celery Task in the TeamFlow app.'
+        from_email = smtp_user
+        to_email = email
+        subject = 'Celery Test'
+        body = 'This is a test email sent from Celery Task in the TeamFlow app.'
 
-    msg = MIMEMultipart()
-    msg['From'] = from_email
-    msg['To'] = to_email
-    msg['Subject'] = subject
+        msg = MIMEMultipart()
+        msg['From'] = from_email
+        msg['To'] = to_email
+        msg['Subject'] = subject
 
-    msg.attach(MIMEText(body, 'plain'))
+        msg.attach(MIMEText(body, 'plain'))
 
-    server.sendmail(from_email, to_email, msg.as_string())
+        server.sendmail(from_email, to_email, msg.as_string())
 
-    server.quit()
+        server.quit()
+
+    except Exception as e:
+        print(e, "error@celery/send_mail")
