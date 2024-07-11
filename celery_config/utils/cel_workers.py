@@ -1,6 +1,7 @@
 from celery import Celery
 from app_config import create_app
-from celery import Celery
+from celery import Celery, shared_task
+from flask import render_template_string
 # import celeryConfig
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -34,8 +35,8 @@ def make_celery(app=app):
 celery = make_celery()
 
 
-@celery.task
-def send_mail(email):
+@shared_task
+def send_mail(context):
     try:
         print("Sending Mail")
         smtp_host = 'smtp.gmail.com'
@@ -47,21 +48,33 @@ def send_mail(email):
         server.starttls()
         server.login(smtp_user, smtp_password)
 
-        from_email = smtp_user
-        to_email = email
-        subject = 'Celery Test'
-        body = 'This is a test email sent from Celery Task in the TeamFlow app.'
+        from_email = "support@teamflow.com"
+        to_email = context['email']
+        subject = context['subject']
+
+        # Construct the path to the HTML file within the templates folder
+        template_path = os.path.join(os.getcwd(), 'templates', context['template_name'])
+
+        # Read the HTML file content
+        with open(template_path, 'r') as html_file:
+            body = html_file.read()
+
+        # send context inside the html file
+        body = render_template_string(body, **context)
 
         msg = MIMEMultipart()
         msg['From'] = from_email
         msg['To'] = to_email
         msg['Subject'] = subject
 
-        msg.attach(MIMEText(body, 'plain'))
+        # Change the MIME type to 'html'
+        msg.attach(MIMEText(body, 'html'))
 
         server.sendmail(from_email, to_email, msg.as_string())
 
         server.quit()
+        return "Mail sent successfully"
 
     except Exception as e:
         print(e, "error@celery/send_mail")
+        return "Failed to send mail"
