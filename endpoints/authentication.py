@@ -16,8 +16,6 @@ AUTH_PREFIX = 'auth'
 
 @auth.route('/')
 def test_endpoint():
-    from celery_config.utils.cel_workers import send_mail
-    send_mail.delay()
     return return_response(HttpStatus.OK, status=StatusRes.SUCCESS, message="Welcome to TeamFlow")
 
 
@@ -52,6 +50,8 @@ def login():
 @auth.route(f'/{AUTH_PREFIX}/register', methods=['POST'])
 def register():
     try:
+        from celery_config.utils.cel_workers import send_mail
+
         data = request.get_json()
         first_name = data.get('first_name')
         last_name = data.get('last_name')
@@ -105,6 +105,17 @@ def register():
         otp = usersession.otp
         print(otp, "otp")
         # send mail to the user
+
+        payload = {
+            'email': email,
+            'subject': 'Welcome to TeamFlow',
+            'template_name': 'otp.html',
+            'name': f"{last_name.title()} {first_name.title()}",
+            'otp': otp,
+            'date': datetime.now().strftime("%d-%b-%Y %H:%M:%S")
+        }
+        print("Calling celery")
+        send_mail.delay(payload)
         return return_response(HttpStatus.OK, status=StatusRes.SUCCESS,
                                message="Please check your email for OTP to verify your account",
                                user_email=user.email)
@@ -154,6 +165,8 @@ def verify_email():
 @auth.route(f'/{AUTH_PREFIX}/resend-otp', methods=['POST'])
 def resend_otp():
     try:
+        from celery_config.utils.cel_workers import send_mail
+
         data = request.get_json()
         email = data.get("email")
         if not email:
@@ -169,6 +182,16 @@ def resend_otp():
         usersession = create_otp(user.id)
         print(usersession.otp, "otp")
         # send mail to the user
+        payload = {
+            'email': email,
+            'subject': 'Welcome to TeamFlow',
+            'template_name': 'otp.html',
+            'name': f"{user.last_name.title()} {user.first_name.title()}",
+            'otp': usersession.otp,
+            'date': datetime.now().strftime("%d-%b-%Y %H:%M:%S")
+        }
+        print("calling celery")
+        send_mail.delay(payload)
         return return_response(HttpStatus.OK, status=StatusRes.SUCCESS,
                                message="OTP sent successfully")
     except Exception as e:
@@ -181,6 +204,7 @@ def resend_otp():
 @auth.route(f'/{AUTH_PREFIX}/reset-password', methods=['POST'])
 def reset_password():
     try:
+        from celery_config.utils.cel_workers import send_mail
         data = request.get_json()
         email = data.get("email")
         if not email:
@@ -193,6 +217,15 @@ def reset_password():
         usersession = create_reset_p(user.id)
         print(usersession.reset_p, "reset_p")
         # send mail to the user
+        payload = {
+            'email': email,
+            'subject': 'Reset Password',
+            'template_name': 'token.html',
+            'name': f"{user.last_name.title()} {user.first_name.title()}",
+            'token': usersession.reset_p,
+            'date': datetime.now().strftime("%d-%b-%Y %H:%M:%S")
+        }
+        send_mail.delay(payload)
         return return_response(HttpStatus.OK, status=StatusRes.SUCCESS,
                                message="Password reset link sent successfully")
     except Exception as e:
@@ -243,6 +276,7 @@ def verify_reset_password():
 @auth.route(f'/{AUTH_PREFIX}/resend-reset-password', methods=['POST'])
 def resend_reset_password():
     try:
+        from celery_config.utils.cel_workers import send_mail
         data = request.get_json()
         email = data.get("email")
         if not email:
@@ -255,6 +289,15 @@ def resend_reset_password():
         usersession = create_reset_p(user.id)
         print(usersession.reset_p, "reset_p")
         # send mail to the user
+        payload = {
+            'email': email,
+            'subject': 'Reset Password',
+            'template_name': 'token.html',
+            'name': f"{user.last_name.title()} {user.first_name.title()}",
+            'token': usersession.reset_p,
+            'date': datetime.now().strftime("%d-%b-%Y %H:%M:%S")
+        }
+        send_mail.delay(payload)
         return return_response(HttpStatus.OK, status=StatusRes.SUCCESS,
                                message="Password reset link sent successfully")
     except Exception as e:
