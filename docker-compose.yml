@@ -1,11 +1,14 @@
-version: '3'
-
 services:
   celery:
     build:
       context: .
       dockerfile: Dockerfile.celery
     container_name: teamflow-celery
+    restart: unless-stopped
+    depends_on:
+      - redis
+    networks:
+      - teamflow_network
     volumes:
       - .:/app
     env_file:
@@ -19,7 +22,25 @@ services:
     volumes:
       - .:/app
     depends_on:
+      - redis
       - celery
-    container_name: teamflow
+    container_name: teamflow-api
+    networks:
+      - teamflow_network
     env_file:
       - .env
+  redis:
+    image: redis:7.0-alpine
+    restart: unless-stopped
+    container_name: teamflow-redis
+    command: --port 6380
+    expose:
+      - 6380
+    networks:
+      - teamflow_network
+    ports:
+      - 6380:6380
+
+networks:
+  teamflow_network:
+    external: true
