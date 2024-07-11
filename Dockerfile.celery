@@ -13,9 +13,8 @@ RUN apk update && apk add --no-cache \
     libc-dev
 
 WORKDIR /app
+COPY requirements.txt /app
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-CMD ["celery", "-A", "celery_config.utils.cel_workers.celery", "worker", "--loglevel=info", "-E"]
+CMD ["celery", "-A", "celery_config.utils.cel_workers.celery", "worker", "--loglevel=info", "--concurrency=4", "--autoscale=4,2", "-E"]
