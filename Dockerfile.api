@@ -13,11 +13,12 @@ RUN apk update && apk add --no-cache \
     libc-dev
 
 WORKDIR /app
+COPY requirements.txt /app
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app
-RUN pip install -r requirements.txt
 EXPOSE 7000
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["python", "runserver.py"]
-#CMD ["gunicorn", "-b", "0.0.0.0:7000", "-w", "4", "runserver:app"]     # This is for production deployment
+#CMD ["python", "runserver.py"]
+CMD ["gunicorn", "-b", "0.0.0.0:7000", "-w", "4", "runserver:app"]     # This is for production deployment
