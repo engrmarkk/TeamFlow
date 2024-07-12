@@ -55,3 +55,6 @@ def generate_random_string(length=20):
     random_string = ''.join(choice(characters) for _ in range(length))
     return random_string
 
+
+def return_user_dict(user):
+    return user.to_dict()
