@@ -22,6 +22,17 @@ class Users(db.Model):
     notifications = relationship('Notifications', backref='recipient', lazy=True)
     usersession = relationship('UserSession', backref='user', lazy=True, uselist=False)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'username': self.username,
+            'email': self.email,
+            'date_joined': self.date_joined,
+            'email_verified': self.email_verified
+        }
+
     def save(self):
         db.session.add(self)
         db.session.commit()
@@ -134,5 +145,11 @@ def current_user_info(user):
         "first_name": user.first_name.title(),
         "last_name": user.last_name.title(),
         "username": user.username,
-        "email": user.email
+        "email": user.email,
+        "email_verified": user.email_verified
     }
+
+
+# get all users
+def get_all_users():
+    return Users.query.all()
