@@ -24,3 +24,9 @@ class Projects(db.Model):
 
     def __repr__(self):
         return '<Projects %r>' % self.name
+
+
+def create_project(name, description, owner_id):
+    project = Projects(name=name, description=description, owner_id=owner_id)
+    project.save()
+    return project
