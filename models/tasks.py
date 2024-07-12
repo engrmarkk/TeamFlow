@@ -2,6 +2,7 @@ from extensions import db
 from sqlalchemy.orm import relationship
 from utils import gen_uuid
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
 
 
 class Tasks(db.Model):
@@ -23,3 +24,23 @@ class Tasks(db.Model):
 
     def __repr__(self):
         return '<Tasks %r>' % self.title
+
+
+def create_task(title, description, status, project_id, assignee_id, due_date):
+    try:
+        task = Tasks(title=title, description=description, status=status, project_id=project_id,
+                     assignee_id=assignee_id, due_date=due_date)
+        task.save()
+        return task
+    except IntegrityError as e:
+        print(e, "error@tasks/create-task")
+        return None
+
+
+def get_task_for_project(project_id):
+    return Tasks.query.filter_by(project_id=project_id).all()
+
+
+# get a task by id
+def get_task(task_id, project_id):
+    return Tasks.query.filter_by(id=task_id, project_id=project_id).first()
