@@ -129,7 +129,7 @@ def register():
 
         if not is_valid_email(email):
             return return_response(
-                HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message="Invalid Email"
+                HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message="Invalid Email Format"
             )
 
         val_pass = validate_password(password)
@@ -200,6 +200,10 @@ def verify_email():
                 HttpStatus.BAD_REQUEST,
                 status=StatusRes.FAILED,
                 message="Email is required",
+            )
+        if not is_valid_email(email):
+            return return_response(
+                HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message="Invalid Email Format"
             )
         user = get_user_by_email(email.lower())
         if not user:
