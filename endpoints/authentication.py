@@ -201,6 +201,7 @@ def verify_email():
                 status=StatusRes.FAILED,
                 message="Email is required",
             )
+        # to check if email is in a valid format
         if not is_valid_email(email):
             return return_response(
                 HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message="Invalid Email Format"
