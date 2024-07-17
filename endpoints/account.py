@@ -140,3 +140,10 @@ def create_task_endpoint():
             status=StatusRes.FAILED,
             message="Network Error",
         )
+
+# get tasks for a project
+
+
+# @account.route(f"/{ACCOUNT_PREFIX}/get-tasks/<project_id>", methods=["GET"])
+# @jwt_required()
+# @email_verified_required
