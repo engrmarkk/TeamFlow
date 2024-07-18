@@ -5,7 +5,7 @@ from extensions import db, migrate, jwt, cors
 from http_status import HttpStatus
 from utils import return_response
 from status_res import StatusRes
-from models import Users, user_project, Projects, Messages, Notifications, Documents, Tasks
+from models import Users, user_project, Projects, Messages, Notifications, Documents, Tasks, Organizations
 
 
 def create_app(config_name='development'):
@@ -20,7 +20,7 @@ def create_app(config_name='development'):
     @app.errorhandler(404)
     def not_found(error):
         return return_response(HttpStatus.NOT_FOUND, status=StatusRes.FAILED,
-                               message="Not Found")
+                               message="Endpoint Not Found")
 
     # handle 500
     @app.errorhandler(500)
@@ -56,8 +56,12 @@ def create_app(config_name='development'):
             'Messages': Messages,
             'Notifications': Notifications,
             'Documents': Documents,
-            'Tasks': Tasks
+            'Tasks': Tasks,
+            'Organizations': Organizations
         }
+
+    # with app.app_context():
+    #     db.create_all()
 
     # register blueprints
     app.register_blueprint(authentication_blueprint, url_prefix='/api/v1')
