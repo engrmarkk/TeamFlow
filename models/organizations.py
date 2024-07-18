@@ -10,7 +10,8 @@ class Organizations(db.Model):
     name = db.Column(db.String(80), unique=True, nullable=False)
     description = db.Column(db.String(255), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.now())
-    users = relationship('Users', secondary='users_organization', back_populates='organizations')
+    users = relationship('Users', backref='organization')
+    projects = relationship('Projects', backref='organization')
 
     def to_dict(self):
         return {
