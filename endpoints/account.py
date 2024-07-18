@@ -3,16 +3,21 @@ from utils import return_response, return_user_dict
 from http_status import HttpStatus
 from status_res import StatusRes
 from flask_jwt_extended import current_user, jwt_required
+from utils import is_valid_email
 from models import (
     current_user_info,
     create_project,
     get_user_ids_by_project_id,
     get_all_users,
     create_task,
+    create_user,
+    email_exist, username_exist, create_otp,
     get_task,
+    get_one_project,
     get_task_for_project,
 )
 from decorators import email_verified_required
+from datetime import datetime
 
 
 account = Blueprint("account", __name__)
@@ -30,6 +35,122 @@ def dashboard():
         message="User Dashboard",
         user_info=current_user_info(current_user),
     )
+
+
+@account.route(f"/{ACCOUNT_PREFIX}/create-user", methods=["POST"])
+@jwt_required()
+@email_verified_required
+# super admin required
+def create_user_endpoint():
+    try:
+        from celery_config.utils.cel_workers import send_mail
+
+        data = request.get_json()
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        username = data.get("username")
+        email = data.get("email")
+        password = data.get("password")
+        is_admin = data.get("is_admin", False)
+        is_super_admin = data.get("is_super_admin", False)
+        if not first_name:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="First name is required",
+            )
+        if not last_name:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Last name is required",
+            )
+        if not username:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Username is required",
+            )
+        if not email:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Email is required",
+            )
+        if not password:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Password is required",
+            )
+        if is_admin and is_super_admin:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Cannot create admin and super admin at the same time",
+            )
+        username = username.lower()
+        email = email.lower()
+        first_name = first_name.lower()
+        last_name = last_name.lower()
+
+        if not is_valid_email(email):
+            return return_response(
+                HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message="Invalid Email Format"
+            )
+        if username_exist(username):
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Username already exists",
+            )
+
+        if email_exist(email):
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Email already exists",
+            )
+        if not isinstance(is_admin, bool) or not isinstance(is_super_admin, bool):
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="is_admin and is_super_admin must be boolean",
+            )
+        is_admin = True if is_admin or is_super_admin else False
+        user = create_user(first_name, last_name, username,
+                           email, password, current_user.organization_id,
+                           is_admin=is_admin, is_super_admin=is_super_admin)
+
+        usersession = create_otp(user.id)
+        otp = usersession.otp
+        print(otp, "otp")
+        # send mail to the user
+
+        payload = {
+            "email": email,
+            "subject": "Welcome to TeamFlow",
+            "template_name": "otp.html",
+            "name": f"{last_name.title()} {first_name.title()}",
+            "otp": otp,
+            "date": datetime.now().strftime("%d-%b-%Y %H:%M:%S"),
+        }
+        print("Calling celery")
+        send_mail.delay(payload)
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="User created successfully",
+            user=user.to_dict(),
+        )
+
+    except Exception as e:
+        print(e, "error@account/create-user")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
 
 
 # create project endpoint
@@ -58,11 +179,44 @@ def create_project_endpoint():
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
             message="Project created successfully",
-            project=project,
+            project=project.to_dict(),
         )
 
     except Exception as e:
         print(e, "error@account/create-project")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+# get projects endpoint
+@account.route(f"/{ACCOUNT_PREFIX}/get-projects", methods=["GET"])
+@jwt_required()
+@email_verified_required
+def get_projects_endpoint():
+    try:
+        project_id = request.args.get("project_id")
+        if project_id:
+            project = get_one_project(project_id, current_user.id)
+            return return_response(
+                HttpStatus.OK,
+                status=StatusRes.SUCCESS,
+                message="Project fetched successfully",
+                project=project.to_dict(),
+            )
+
+        projects = current_user.projects
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Projects fetched successfully",
+            projects=[project.to_dict() for project in projects],
+        )
+
+    except Exception as e:
+        print(e, "error@account/get-projects")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
             status=StatusRes.FAILED,
@@ -144,6 +298,30 @@ def create_task_endpoint():
 # get tasks for a project
 
 
-# @account.route(f"/{ACCOUNT_PREFIX}/get-tasks/<project_id>", methods=["GET"])
-# @jwt_required()
-# @email_verified_required
+@account.route(f"/{ACCOUNT_PREFIX}/get-tasks/<project_id>", methods=["GET"])
+@jwt_required()
+@email_verified_required
+def get_tasks_endpoint(project_id):
+    try:
+        tasks = get_task_for_project(project_id)
+        if not tasks:
+            return return_response(
+                HttpStatus.OK,
+                status=StatusRes.SUCCESS,
+                message="Tasks fetched successfully",
+                tasks=[],
+            )
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Tasks fetched successfully",
+            tasks=[task.to_dict() for task in tasks],
+        )
+
+    except Exception as e:
+        print(e, "error@account/get-tasks")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
