@@ -11,6 +11,7 @@ class Projects(db.Model):
     description = db.Column(db.String(255), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.now())
     owner_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=False)
+    organization_id = db.Column(db.String(50), db.ForeignKey('organizations.id'), nullable=True)
     users = relationship('Users', secondary='users_project', back_populates='projects')
     tasks = relationship('Tasks', backref='project', lazy=True)
     document = relationship('Documents', backref='project', lazy=True)
@@ -44,5 +45,10 @@ def create_project(name, description, owner_id):
     return project
 
 
-def get_one_project(project_id, user_id):
-    return Projects.query.filter_by(id=project_id, owner_id=user_id).first()
+def get_one_project(project_id, org_id):
+    return Projects.query.filter_by(id=project_id, organization_id=org_id).first()
+
+
+def get_projects(org_id):
+    return Projects.query.filter_by(organization_id=org_id).order_by(Projects.date_created.desc()
+                                                                     ).all()
