@@ -16,6 +16,9 @@ class Users(db.Model):
     password = db.Column(db.Text, nullable=False)
     date_joined = db.Column(db.DateTime, default=datetime.now())
     email_verified = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    is_super_admin = db.Column(db.Boolean, default=False)
+    organization_id = db.Column(db.String(50), db.ForeignKey('organizations.id'), nullable=True)
     projects = relationship('Projects', secondary='users_project', back_populates='users')
     tasks = relationship('Tasks', backref='assignee', lazy=True)
     messages = relationship('Messages', backref='author', lazy=True)
@@ -87,8 +90,11 @@ def username_exist(username):
     return False
 
 
-def create_user(first_name, last_name, username, email, password):
-    user = Users(first_name=first_name, last_name=last_name, username=username, email=email, password=hasher.hash(password))
+def create_user(first_name, last_name, username, email, password, organization_id, is_admin, is_super_admin):
+    user = Users(first_name=first_name,
+                 last_name=last_name, username=username,
+                 email=email, password=hasher.hash(password), organization_id=organization_id,
+                 is_admin=is_admin, is_super_admin=is_super_admin)
     user.save()
     return user
 
