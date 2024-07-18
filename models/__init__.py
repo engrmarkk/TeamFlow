@@ -5,7 +5,8 @@ from .users import (Users, authenticate, email_exist,
                     get_user_by_reset_p, update_password, current_user_info,
                     get_all_users)
 from .user_project import user_project, get_user_ids_by_project_id
-from .projects import Projects, create_project
+from .projects import Projects, create_project, get_one_project
 from .messages import Messages
 from .notifications import Notifications
 from .documents import Documents
+from .organizations import *
