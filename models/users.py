@@ -28,12 +28,17 @@ class Users(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'first_name': self.first_name,
-            'last_name': self.last_name,
-            'username': self.username,
+            'first_name': self.first_name.title(),
+            'last_name': self.last_name.title(),
+            'username': self.username.title(),
             'email': self.email,
             'date_joined': self.date_joined,
-            'email_verified': self.email_verified
+            'email_verified': self.email_verified,
+            'role': (
+                "super_admin" if self.is_super_admin
+                else "admin" if self.is_admin
+                else "user"
+            )
         }
 
     def save(self):
@@ -159,3 +164,9 @@ def current_user_info(user):
 # get all users
 def get_all_users():
     return Users.query.all()
+
+
+# get users by organization
+def get_users_by_organization(organization_id):
+    return Users.query.filter_by(organization_id=organization_id).order_by(Users.date_joined.desc()
+                                                                          ).all()
