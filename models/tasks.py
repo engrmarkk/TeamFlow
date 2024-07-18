@@ -15,6 +15,18 @@ class Tasks(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.now())
     due_date = db.Column(db.DateTime, nullable=True)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'status': self.status,
+            'project_id': self.project_id,
+            'assignee_id': self.assignee_id,
+            'date_created': self.date_created,
+            'due_date': self.due_date
+        }
+
     def save(self):
         db.session.add(self)
         db.session.commit()
