@@ -17,6 +17,7 @@ from models import (
     create_reset_p,
     get_user_by_reset_p,
     update_password,
+    check_if_org_exist, create_org
 )
 from datetime import datetime
 
@@ -82,6 +83,8 @@ def register():
 
         data = request.get_json()
         first_name = data.get("first_name")
+        organization_name = data.get("organization_name")
+        organization_desc = data.get("organization_description")
         last_name = data.get("last_name")
         username = data.get("username")
         email = data.get("email")
@@ -122,10 +125,25 @@ def register():
                 message="Password is required",
             )
 
+        if not organization_name:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Organization Name is required",
+            )
+
+        if not organization_desc:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Organization Description is required",
+            )
+
         username = username.lower()
         email = email.lower()
         first_name = first_name.lower()
         last_name = last_name.lower()
+        organization_name = organization_name.lower()
 
         if not is_valid_email(email):
             return return_response(
@@ -151,7 +169,18 @@ def register():
                 status=StatusRes.FAILED,
                 message="Email already exists",
             )
-        user = create_user(first_name, last_name, username, email, password)
+
+        if check_if_org_exist(organization_name):
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Organization already exists",
+            )
+
+        org_id = create_org(organization_name, organization_desc.lower())
+
+        user = create_user(first_name, last_name, username, email, password, org_id,
+                           is_super_admin=True, is_admin=True)
         usersession = create_otp(user.id)
         otp = usersession.otp
         print(otp, "otp")
