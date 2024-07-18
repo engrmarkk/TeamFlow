@@ -15,6 +15,18 @@ class Projects(db.Model):
     tasks = relationship('Tasks', backref='project', lazy=True)
     document = relationship('Documents', backref='project', lazy=True)
 
+    def to_dict(self):
+        proj = {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'date_created': self.date_created,
+            'owner_id': self.owner_id
+        }
+        if self.tasks:
+            proj['tasks'] = [task.to_dict() for task in self.tasks]
+        return proj
+
     def save(self):
         db.session.add(self)
         db.session.commit()
@@ -30,3 +42,7 @@ def create_project(name, description, owner_id):
     project = Projects(name=name, description=description, owner_id=owner_id)
     project.save()
     return project
+
+
+def get_one_project(project_id, user_id):
+    return Projects.query.filter_by(id=project_id, owner_id=user_id).first()
