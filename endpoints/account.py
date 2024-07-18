@@ -8,15 +8,15 @@ from models import (
     current_user_info,
     create_project,
     get_user_ids_by_project_id,
-    get_all_users,
+    get_all_users, get_users_by_organization,
     create_task,
     create_user,
     email_exist, username_exist, create_otp,
     get_task,
-    get_one_project,
+    get_one_project, get_projects,
     get_task_for_project,
 )
-from decorators import email_verified_required
+from decorators import email_verified_required, super_admin_required
 from datetime import datetime
 
 
@@ -34,6 +34,28 @@ def dashboard():
         status=StatusRes.SUCCESS,
         message="User Dashboard",
         user_info=current_user_info(current_user),
+        role=(
+            "super_admin" if current_user.is_super_admin
+            else "admin" if current_user.is_admin
+            else "user"
+        ),
+    )
+
+
+# get staffs/users
+@account.route(f"/{ACCOUNT_PREFIX}/users", methods=["GET"])
+@jwt_required()
+@email_verified_required
+# super admin required
+@super_admin_required
+def get_all_users_endpoint():
+    users = get_users_by_organization(current_user.organization_id)
+    return return_response(
+        HttpStatus.OK,
+        status=StatusRes.SUCCESS,
+        message="All Users",
+        users=[return_user_dict(user) for user in users],
+        organization=current_user.organization.name.title()
     )
 
 
@@ -41,6 +63,7 @@ def dashboard():
 @jwt_required()
 @email_verified_required
 # super admin required
+@super_admin_required
 def create_user_endpoint():
     try:
         from celery_config.utils.cel_workers import send_mail
@@ -199,7 +222,7 @@ def get_projects_endpoint():
     try:
         project_id = request.args.get("project_id")
         if project_id:
-            project = get_one_project(project_id, current_user.id)
+            project = get_one_project(project_id, current_user.organization_id)
             return return_response(
                 HttpStatus.OK,
                 status=StatusRes.SUCCESS,
@@ -207,7 +230,7 @@ def get_projects_endpoint():
                 project=project.to_dict(),
             )
 
-        projects = current_user.projects
+        projects = get_projects(current_user.organization_id)
         return return_response(
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
