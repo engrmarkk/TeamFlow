@@ -39,8 +39,8 @@ class Projects(db.Model):
         return '<Projects %r>' % self.name
 
 
-def create_project(name, description, owner_id):
-    project = Projects(name=name, description=description, owner_id=owner_id)
+def create_project(name, description, owner_id, org_id):
+    project = Projects(name=name, description=description, owner_id=owner_id, organization_id=org_id)
     project.save()
     return project
 
