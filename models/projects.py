@@ -22,7 +22,8 @@ class Projects(db.Model):
             'name': self.name,
             'description': self.description,
             'date_created': self.date_created,
-            'owner_id': self.owner_id
+            'owner_id': self.owner_id,
+            'tasks': [task.to_dict() for task in self.tasks]
         }
         if self.tasks:
             proj['tasks'] = [task.to_dict() for task in self.tasks]
