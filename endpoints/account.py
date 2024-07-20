@@ -4,6 +4,7 @@ from http_status import HttpStatus
 from status_res import StatusRes
 from flask_jwt_extended import current_user, jwt_required
 from utils import is_valid_email
+from sqlalchemy.exc import IntegrityError
 from models import (
     current_user_info,
     create_project,
@@ -197,12 +198,20 @@ def create_project_endpoint():
                 status=StatusRes.FAILED,
                 message="Project description is required",
             )
-        project = create_project(name, description, current_user.id)
+        project = create_project(name, description, current_user.id, current_user.organization_id)
         return return_response(
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
             message="Project created successfully",
             project=project.to_dict(),
+        )
+
+    except IntegrityError as e:
+        print(e, "error@account/create-project")
+        return return_response(
+            HttpStatus.BAD_REQUEST,
+            status=StatusRes.FAILED,
+            message="Project name already exists",
         )
 
     except Exception as e:
