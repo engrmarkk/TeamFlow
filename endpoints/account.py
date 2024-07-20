@@ -264,13 +264,6 @@ def get_users_endpoint(project_id):
     try:
         all_users = get_all_users()
         users = get_user_ids_by_project_id(project_id)
-        if not users:
-            return return_response(
-                HttpStatus.OK,
-                status=StatusRes.SUCCESS,
-                message="Users fetched successfully",
-                users=[],
-            )
         not_assigned_users = [user for user in all_users if user.id not in users]
         not_assigned_users_list = list(map(return_user_dict, not_assigned_users))
         return return_response(
