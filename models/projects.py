@@ -12,7 +12,6 @@ class Projects(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.now())
     owner_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=False)
     organization_id = db.Column(db.String(50), db.ForeignKey('organizations.id'), nullable=True)
-    users = relationship('Users', secondary='users_project', back_populates='projects')
     tasks = relationship('Tasks', backref='project', lazy=True)
     document = relationship('Documents', backref='project', lazy=True)
 
@@ -22,7 +21,7 @@ class Projects(db.Model):
             'name': self.name,
             'description': self.description,
             'date_created': self.date_created,
-            'owner_id': self.owner_id,
+            'created_by': f"{self.users.first_name.title()} {self.users.last_name.title()}",
             'tasks': [task.to_dict() for task in self.tasks]
         }
         if self.tasks:
