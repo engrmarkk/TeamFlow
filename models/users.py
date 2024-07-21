@@ -19,7 +19,7 @@ class Users(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_super_admin = db.Column(db.Boolean, default=False)
     organization_id = db.Column(db.String(50), db.ForeignKey('organizations.id'), nullable=True)
-    projects = relationship('Projects', secondary='users_project', back_populates='users')
+    projects = relationship('Projects', backref='users')
     tasks = relationship('Tasks', backref='assignee', lazy=True)
     messages = relationship('Messages', backref='author', lazy=True)
     notifications = relationship('Notifications', backref='recipient', lazy=True)
@@ -162,8 +162,8 @@ def current_user_info(user):
 
 
 # get all users
-def get_all_users():
-    return Users.query.all()
+def get_all_users(organization_id):
+    return Users.query.filter_by(organization_id=organization_id).all()
 
 
 # get users by organization
