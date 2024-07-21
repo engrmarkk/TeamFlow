@@ -8,7 +8,6 @@ from sqlalchemy.exc import IntegrityError
 from models import (
     current_user_info,
     create_project,
-    get_user_ids_by_project_id,
     get_all_users, get_users_by_organization,
     create_task,
     create_user,
@@ -257,15 +256,13 @@ def get_projects_endpoint():
 
 
 # get users to be assigned to a project
-@account.route(f"/{ACCOUNT_PREFIX}/get-users/<project_id>", methods=["GET"])
+@account.route(f"/{ACCOUNT_PREFIX}/get-users", methods=["GET"])
 @jwt_required()
 @email_verified_required
-def get_users_endpoint(project_id):
+def get_users_endpoint():
     try:
-        all_users = get_all_users()
-        users = get_user_ids_by_project_id(project_id)
-        not_assigned_users = [user for user in all_users if user.id not in users]
-        not_assigned_users_list = list(map(return_user_dict, not_assigned_users))
+        all_users = get_all_users(current_user.organization_id)
+        not_assigned_users_list = list(map(return_user_dict, all_users))
         return return_response(
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
@@ -296,6 +293,41 @@ def create_task_endpoint():
         project_id = data.get("project_id")
         assignee_id = data.get("assignee_id")
         due_date = data.get("due_date")
+
+        if not title:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Title is required",
+            )
+        if not project_id:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Project id is required",
+            )
+        if not assignee_id:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Who are you assigning this task to?",
+            )
+        if not due_date:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="When is this task due?",
+            )
+        # convert due date to datetime
+        try:
+            due_date = datetime.strptime(due_date, "%d-%m-%Y")
+        except ValueError as e:
+            print(e, "error@account/create-task")
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Invalid due date format,  should be dd-mm-yyyy",
+            )
         task = create_task(
             title, description, status, project_id, assignee_id, due_date
         )
@@ -309,7 +341,7 @@ def create_task_endpoint():
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
             message="Task created successfully",
-            task=task,
+            task=task.to_dict(),
         )
 
     except Exception as e:
