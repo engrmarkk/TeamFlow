@@ -5,7 +5,7 @@ from extensions import db, migrate, jwt, cors
 from http_status import HttpStatus
 from utils import return_response
 from status_res import StatusRes
-from models import Users, user_project, Projects, Messages, Notifications, Documents, Tasks, Organizations
+from models import Users, Projects, Messages, Notifications, Documents, Tasks, Organizations
 
 
 def create_app(config_name='development'):
@@ -51,7 +51,6 @@ def create_app(config_name='development'):
         return {
             'db': db,
             'Users': Users,
-            'user_project': user_project,
             'Projects': Projects,
             'Messages': Messages,
             'Notifications': Notifications,
