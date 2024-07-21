@@ -23,6 +23,7 @@ class Tasks(db.Model):
             'status': self.status,
             'project_id': self.project_id,
             'assignee_id': self.assignee_id,
+            'assigned_to': f"{self.assignee.last_name.title()} {self.assignee.first_name.title()}",
             'date_created': self.date_created,
             'due_date': self.due_date
         }
@@ -40,7 +41,7 @@ class Tasks(db.Model):
 
 def create_task(title, description, status, project_id, assignee_id, due_date):
     try:
-        task = Tasks(title=title, description=description, status=status, project_id=project_id,
+        task = Tasks(title=title, description=description, status=status if status else "To Do", project_id=project_id,
                      assignee_id=assignee_id, due_date=due_date)
         task.save()
         return task
