@@ -11,6 +11,7 @@ from models import (
     authenticate,
     username_exist,
     email_exist,
+    email_exist,
     create_user,
     create_otp,
     get_user_by_email,
