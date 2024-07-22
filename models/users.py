@@ -174,3 +174,11 @@ def get_users_by_organization(organization_id):
 
 def get_user_by_id(user_id):
     return Users.query.filter_by(id=user_id).first()
+
+
+def update_user_role(user_id, is_admin, is_super_admin):
+    user = get_user_by_id(user_id)
+    user.is_admin = is_admin
+    user.is_super_admin = is_super_admin
+    user.update()
+    return user
