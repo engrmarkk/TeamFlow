@@ -169,4 +169,8 @@ def get_all_users(organization_id):
 # get users by organization
 def get_users_by_organization(organization_id):
     return Users.query.filter_by(organization_id=organization_id).order_by(Users.date_joined.desc()
-                                                                          ).all()
+                                                                           ).all()
+
+
+def get_user_by_id(user_id):
+    return Users.query.filter_by(id=user_id).first()
