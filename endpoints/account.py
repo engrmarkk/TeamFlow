@@ -8,17 +8,25 @@ from sqlalchemy.exc import IntegrityError
 from models import (
     current_user_info,
     create_project,
-    get_all_users, get_users_by_organization,
+    get_all_users,
+    get_users_by_organization,
     create_task,
     create_user,
-    email_exist, username_exist, create_otp,
+update_user_role,
+    email_exist,
+    username_exist,
+    create_otp,
     get_task,
-    get_one_project, get_projects,
-    get_task_for_project, get_user_by_id
+    update_task,
+    update_project,
+    get_one_project,
+    get_projects,
+    get_task_for_project,
+    get_user_by_id,
+    task_assigned_to_user,
 )
 from decorators import email_verified_required, super_admin_required
 from datetime import datetime
-
 
 account = Blueprint("account", __name__)
 
@@ -35,10 +43,11 @@ def dashboard():
         message="User Dashboard",
         user_info=current_user_info(current_user),
         role=(
-            "super_admin" if current_user.is_super_admin
-            else "admin" if current_user.is_admin
-            else "user"
+            "super_admin"
+            if current_user.is_super_admin
+            else "admin" if current_user.is_admin else "user"
         ),
+        taks=task_assigned_to_user(current_user.id),
     )
 
 
@@ -55,7 +64,7 @@ def get_all_users_endpoint():
         status=StatusRes.SUCCESS,
         message="All Users",
         users=[return_user_dict(user) for user in users],
-        organization=current_user.organization.name.title()
+        organization=current_user.organization.name.title(),
     )
 
 
@@ -119,7 +128,9 @@ def create_user_endpoint():
 
         if not is_valid_email(email):
             return return_response(
-                HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message="Invalid Email Format"
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Invalid Email Format",
             )
         if username_exist(username):
             return return_response(
@@ -141,9 +152,16 @@ def create_user_endpoint():
                 message="is_admin and is_super_admin must be boolean",
             )
         is_admin = True if is_admin or is_super_admin else False
-        user = create_user(first_name, last_name, username,
-                           email, password, current_user.organization_id,
-                           is_admin=is_admin, is_super_admin=is_super_admin)
+        user = create_user(
+            first_name,
+            last_name,
+            username,
+            email,
+            password,
+            current_user.organization_id,
+            is_admin=is_admin,
+            is_super_admin=is_super_admin,
+        )
 
         usersession = create_otp(user.id)
         otp = usersession.otp
@@ -176,6 +194,54 @@ def create_user_endpoint():
         )
 
 
+# update user role
+@account.route(f"/{ACCOUNT_PREFIX}/update-user-role", methods=["POST"])
+@jwt_required()
+@email_verified_required
+@super_admin_required
+def update_user_role_endpoint():
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        is_admin = data.get("is_admin", False)
+        is_super_admin = data.get("is_super_admin", False)
+        if not user_id:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="User id is required",
+            )
+        if not isinstance(is_admin, bool) or not isinstance(is_super_admin, bool):
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="is_admin and is_super_admin must be boolean",
+            )
+        user = update_user_role(user_id, is_admin, is_super_admin)
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="User role updated successfully",
+            user=user.to_dict(),
+        )
+
+    except IntegrityError as e:
+        print(e, "error@account/update-user-role")
+        return return_response(
+            HttpStatus.BAD_REQUEST,
+            status=StatusRes.FAILED,
+            message="User does not exist",
+        )
+
+    except Exception as e:
+        print(e, "error@account/update-user-role")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
 # create project endpoint
 @account.route(f"/{ACCOUNT_PREFIX}/create-project", methods=["POST"])
 @jwt_required()
@@ -197,7 +263,9 @@ def create_project_endpoint():
                 status=StatusRes.FAILED,
                 message="Project description is required",
             )
-        project = create_project(name, description, current_user.id, current_user.organization_id)
+        project = create_project(
+            name, description, current_user.id, current_user.organization_id
+        )
         return return_response(
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
@@ -215,6 +283,43 @@ def create_project_endpoint():
 
     except Exception as e:
         print(e, "error@account/create-project")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+# update project
+@account.route(f"/{ACCOUNT_PREFIX}/update-project/<project_id>", methods=["PATCH"])
+@jwt_required()
+@email_verified_required
+def update_project_endpoint(project_id):
+    try:
+        data = request.get_json()
+        name = data.get("name")
+        description = data.get("description")
+
+        proj = update_project(
+            project_id, name, description, current_user.organization_id
+        )
+
+        if not proj:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Project not found",
+            )
+
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Project updated successfully",
+            project=proj.to_dict(),
+        )
+
+    except Exception as e:
+        print(e, "error@account/update-project")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
             status=StatusRes.FAILED,
@@ -368,9 +473,8 @@ def create_task_endpoint():
             message="Network Error",
         )
 
+
 # get tasks for a project
-
-
 @account.route(f"/{ACCOUNT_PREFIX}/get-tasks/<project_id>", methods=["GET"])
 @jwt_required()
 @email_verified_required
@@ -388,11 +492,77 @@ def get_tasks_endpoint(project_id):
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
             message="Tasks fetched successfully",
-            tasks=[task.to_dict() for task in tasks],
+            tasks=[task.to_dict2() for task in tasks],
+        )
+    except IntegrityError as e:
+        print(e, "error@account/get-tasks")
+        return return_response(
+            HttpStatus.BAD_REQUEST,
+            status=StatusRes.FAILED,
+            message="Invalid project id",
         )
 
     except Exception as e:
         print(e, "error@account/get-tasks")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+# update task
+@account.route(f"/{ACCOUNT_PREFIX}/update-task/<task_id>", methods=["PATCH"])
+@jwt_required()
+@email_verified_required
+def update_task_endpoint(task_id):
+    try:
+        data = request.get_json()
+        title = data.get("title")
+        description = data.get("description")
+        status = data.get("status")
+        project_id = data.get("project_id")
+        assignee_id = data.get("assignee_id")
+        due_date = data.get("due_date")
+
+        if due_date:
+            try:
+                due_date = datetime.strptime(due_date, "%d-%m-%Y")
+            except ValueError as e:
+                print(e, "error@account/update-task")
+                return return_response(
+                    HttpStatus.BAD_REQUEST,
+                    status=StatusRes.FAILED,
+                    message="Invalid due date format,  should be dd-mm-yyyy",
+                )
+
+        if status and status not in ["In Progress", "Completed"]:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Invalid status",
+            )
+
+        task = update_task(
+            task_id, title, description, status, project_id, assignee_id, due_date
+        )
+
+        if not task:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="There was a problem updating the task",
+            )
+
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Task updated successfully",
+            task=task.to_dict(),
+        )
+
+    except Exception as e:
+        print(e, "error@account/update-task")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
             status=StatusRes.FAILED,
