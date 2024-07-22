@@ -14,7 +14,7 @@ from models import (
     email_exist, username_exist, create_otp,
     get_task,
     get_one_project, get_projects,
-    get_task_for_project,
+    get_task_for_project, get_user_by_id
 )
 from decorators import email_verified_required, super_admin_required
 from datetime import datetime
@@ -285,6 +285,8 @@ def get_users_endpoint():
 @email_verified_required
 def create_task_endpoint():
     try:
+        from celery_config.utils.cel_workers import send_mail
+
         # title, description, status, project_id, assignee_id, due_date
         data = request.get_json()
         title = data.get("title")
@@ -337,6 +339,20 @@ def create_task_endpoint():
                 status=StatusRes.FAILED,
                 message="Task not created",
             )
+        user = get_user_by_id(assignee_id)
+        project = get_one_project(project_id, current_user.organization_id)
+        payload = {
+            "email": user.email,
+            "subject": "Task Created",
+            "template_name": "assigned_project.html",
+            "name": f"{user.last_name.title()} {user.first_name.title()}",
+            "project_name": project.name.title(),
+            "task": task.title.title(),
+            "due_date": due_date.strftime("%d-%b-%Y"),
+            "date": datetime.now().strftime("%d-%b-%Y %H:%M:%S"),
+        }
+        print("Calling celery")
+        send_mail.delay(payload)
         return return_response(
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
