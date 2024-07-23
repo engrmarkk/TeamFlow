@@ -45,6 +45,16 @@ def create_project(name, description, owner_id, org_id):
     return project
 
 
+def update_project(project_id, name, description, org_id):
+    project = Projects.query.filter_by(id=project_id, organization_id=org_id).first()
+    if not project:
+        return None
+    project.name = name or project.name
+    project.description = description or project.description
+    project.update()
+    return project
+
+
 def get_one_project(project_id, org_id):
     return Projects.query.filter_by(id=project_id, organization_id=org_id).first()
 
