@@ -13,6 +13,7 @@ from models import (
     create_task,
     create_user,
 update_user_role,
+get_one_task,
     email_exist,
     username_exist,
     create_otp,
@@ -576,7 +577,7 @@ def update_task_endpoint(task_id):
 @email_verified_required
 def delete_task_endpoint(task_id):
     try:
-        task = get_task(task_id, current_user.organization_id)
+        task = get_one_task(task_id, current_user.organization_id)
         if not task:
             return return_response(
                 HttpStatus.BAD_REQUEST,
