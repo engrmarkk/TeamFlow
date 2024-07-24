@@ -568,3 +568,59 @@ def update_task_endpoint(task_id):
             status=StatusRes.FAILED,
             message="Network Error",
         )
+
+
+# delete task
+@account.route(f"/{ACCOUNT_PREFIX}/delete-task/<task_id>", methods=["DELETE"])
+@jwt_required()
+@email_verified_required
+def delete_task_endpoint(task_id):
+    try:
+        task = get_task(task_id, current_user.organization_id)
+        if not task:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Task not found",
+            )
+        task.delete()
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Task deleted successfully",
+        )
+    except Exception as e:
+        print(e, "error@account/delete-task")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+# delete project
+@account.route(f"/{ACCOUNT_PREFIX}/delete-project/<project_id>", methods=["DELETE"])
+@jwt_required()
+@email_verified_required
+def delete_project_endpoint(project_id):
+    try:
+        project = get_one_project(project_id, current_user.organization_id)
+        if not project:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Project not found",
+            )
+        project.delete()
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Project deleted successfully",
+        )
+    except Exception as e:
+        print(e, "error@account/delete-project")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
