@@ -22,10 +22,9 @@ class Projects(db.Model):
             'description': self.description,
             'date_created': self.date_created,
             'created_by': f"{self.users.first_name.title()} {self.users.last_name.title()}",
-            'tasks': [task.to_dict() for task in self.tasks]
         }
         if self.tasks:
-            proj['tasks'] = [task.to_dict() for task in self.tasks]
+            proj['tasks'] = [task.to_dict2() for task in self.tasks]
         return proj
 
     def save(self):
