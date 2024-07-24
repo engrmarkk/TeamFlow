@@ -1,5 +1,5 @@
 from .tasks import (Tasks, create_task, get_task_for_project,
-                    get_task, task_assigned_to_user,
+                    get_task, task_assigned_to_user, get_one_task,
                     update_task)
 from .users import (Users, authenticate, email_exist,
                     username_exist, create_user,
