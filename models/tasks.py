@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from utils import gen_uuid
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
+from .projects import Projects
 
 
 class Tasks(db.Model):
@@ -117,3 +118,11 @@ def task_assigned_to_user(user_id):
     tasks = Tasks.query.filter_by(assignee_id=user_id).all()
     all_tasks = [task.to_dict() for task in tasks]
     return all_tasks
+
+
+def get_one_task(task_id, org_id):
+    task = Tasks.query.join(Projects, Tasks.project_id == Projects.id).filter(
+        Tasks.id == task_id, Projects.organization_id == org_id).first()
+    if not task:
+        return None
+    return task
