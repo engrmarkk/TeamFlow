@@ -12,7 +12,7 @@ class Projects(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.now())
     owner_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=False)
     organization_id = db.Column(db.String(50), db.ForeignKey('organizations.id'), nullable=True)
-    tasks = relationship('Tasks', backref='project', lazy=True)
+    tasks = relationship('Tasks', backref='project', lazy=True, cascade="all, delete")
     document = relationship('Documents', backref='project', lazy=True)
 
     def to_dict(self):
@@ -33,6 +33,10 @@ class Projects(db.Model):
         db.session.commit()
 
     def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
         db.session.commit()
 
     def __repr__(self):
