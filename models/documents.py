@@ -21,3 +21,10 @@ class Documents(db.Model):
 
     def __repr__(self):
         return '<Documents %r>' % self.name
+
+
+# create document
+def create_document(name, url, project_id, uploaded_by):
+    document = Documents(name=name, url=url, project_id=project_id, uploaded_by=uploaded_by)
+    document.save()
+    return document
