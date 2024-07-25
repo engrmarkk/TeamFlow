@@ -126,3 +126,9 @@ def get_one_task(task_id, org_id):
     if not task:
         return None
     return task
+
+
+def get_users_tasks_for_project(project_id):
+    tasks = Tasks.query.filter_by(project_id=project_id).all()
+    users = [task.user for task in tasks]
+    return users
