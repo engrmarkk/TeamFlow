@@ -7,6 +7,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
+from datetime import datetime
 
 app = create_app()
 
@@ -77,4 +78,27 @@ def send_mail(context):
 
     except Exception as e:
         print(e, "error@celery/send_mail")
+        return "Failed to send mail"
+
+
+@shared_task
+def send_all_users_email(users, current_user, document_name, project_name):
+    try:
+        if users:
+            for user in users:
+                payload = {
+                    "email": user.email,
+                    "subject": "Welcome to TeamFlow",
+                    "template_name": "document_upload.html",
+                    "name": f"{user.last_name.title()} {user.first_name.title()}",
+                    "project_name": project_name,
+                    "document_name": document_name,
+                    "uploaded_by": f"{current_user.last_name.title()} {current_user.first_name.title()}",
+                    "date": datetime.now().strftime("%d-%b-%Y %H:%M:%S"),
+                }
+                send_mail.apply_async(payload)
+        return "Mail sent successfully"
+
+    except Exception as e:
+        print(e, "error@celery/send_all_users_email")
         return "Failed to send mail"
