@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from models import (
     current_user_info,
     create_project,
+create_document,
     get_all_users,
     get_users_by_organization,
     create_task,
@@ -16,7 +17,7 @@ from models import (
     get_one_task,
     email_exist,
     username_exist,
-    create_otp,
+    create_otp, get_users_tasks_for_project,
     get_task,
     update_task,
     update_project,
@@ -337,6 +338,12 @@ def get_projects_endpoint():
         project_id = request.args.get("project_id")
         if project_id:
             project = get_one_project(project_id, current_user.organization_id)
+            if not project:
+                return return_response(
+                    HttpStatus.NOT_FOUND,
+                    status=StatusRes.FAILED,
+                    message="Project not found",
+                )
             return return_response(
                 HttpStatus.OK,
                 status=StatusRes.SUCCESS,
@@ -620,6 +627,57 @@ def delete_project_endpoint(project_id):
         )
     except Exception as e:
         print(e, "error@account/delete-project")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+# upload documents
+@account.route(f"/{ACCOUNT_PREFIX}/upload-documents/<project_id>", methods=["POST"])
+@jwt_required()
+@email_verified_required
+def upload_documents_endpoint(project_id):
+    try:
+        from celery_config.utils.cel_workers import send_all_users_email
+
+        data = request.get_json()
+        document_name = data.get("document_name")
+        document_url = data.get("document_url")
+        if not document_name:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Document Name are required",
+            )
+        if not document_url:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Document URL are required",
+            )
+
+        project = get_one_project(project_id, current_user.organization_id)
+        if not project:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Project not found",
+            )
+        create_document(document_name, document_url, project_id, current_user.id)
+        users = get_users_tasks_for_project(project_id)
+
+        # celery send mail
+        send_all_users_email.delay(users, current_user, document_name, project.name)
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Document uploaded successfully",
+        )
+
+    except Exception as e:
+        print(e, "error@account/upload-documents")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
             status=StatusRes.FAILED,
