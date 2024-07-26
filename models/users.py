@@ -32,7 +32,7 @@ class Users(db.Model):
             'last_name': self.last_name.title(),
             'username': self.username.title(),
             'email': self.email,
-            'date_joined': self.date_joined,
+            'date_joined': self.date_joined.strftime("%d %b, %Y"),
             'email_verified': self.email_verified,
             'role': (
                 "super_admin" if self.is_super_admin
