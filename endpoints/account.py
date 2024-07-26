@@ -668,8 +668,11 @@ def upload_documents_endpoint(project_id):
         create_document(document_name, document_url, project_id, current_user.id)
         users = get_users_tasks_for_project(project_id)
 
+        print(users, "users")
+
         # celery send mail
-        send_all_users_email.delay(users, current_user, document_name, project.name)
+        uploaded_by = f"{current_user.last_name.title()} {current_user.first_name.title()}"
+        send_all_users_email.delay(users, uploaded_by, document_name, project.name)
         return return_response(
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
