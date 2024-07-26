@@ -82,21 +82,21 @@ def send_mail(context):
 
 
 @shared_task
-def send_all_users_email(users, current_user, document_name, project_name):
+def send_all_users_email(users, uploaded_by, document_name, project_name):
     try:
         if users:
             for user in users:
                 payload = {
-                    "email": user.email,
-                    "subject": "Welcome to TeamFlow",
+                    "email": user["email"],
+                    "subject": "Document Uploaded",
                     "template_name": "document_upload.html",
-                    "name": f"{user.last_name.title()} {user.first_name.title()}",
+                    "name": f"{user['last_name'].title()} {user['first_name'].title()}",
                     "project_name": project_name,
                     "document_name": document_name,
-                    "uploaded_by": f"{current_user.last_name.title()} {current_user.first_name.title()}",
+                    "uploaded_by": uploaded_by,
                     "date": datetime.now().strftime("%d-%b-%Y %H:%M:%S"),
                 }
-                send_mail.apply_async(payload)
+                send_mail.delay(payload)
         return "Mail sent successfully"
 
     except Exception as e:
