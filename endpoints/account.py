@@ -8,7 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from models import (
     current_user_info,
     create_project,
-create_document, change_password,
+    create_document,
+    change_password,
     get_all_users,
     get_users_by_organization,
     create_task,
@@ -17,7 +18,8 @@ create_document, change_password,
     get_one_task,
     email_exist,
     username_exist,
-    create_otp, get_users_tasks_for_project,
+    create_otp,
+    get_users_tasks_for_project,
     get_task,
     update_task,
     update_project,
@@ -689,13 +691,17 @@ def upload_documents_endpoint(project_id):
                 status=StatusRes.FAILED,
                 message="Project not found",
             )
-        create_document(document_name, document_url, project_id, current_user.id, public_id)
+        create_document(
+            document_name, document_url, project_id, current_user.id, public_id
+        )
         users = get_users_tasks_for_project(project_id)
 
         print(users, "users")
 
         # celery send mail
-        uploaded_by = f"{current_user.last_name.title()} {current_user.first_name.title()}"
+        uploaded_by = (
+            f"{current_user.last_name.title()} {current_user.first_name.title()}"
+        )
         send_all_users_email.delay(users, uploaded_by, document_name, project.name)
         return return_response(
             HttpStatus.OK,
