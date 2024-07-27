@@ -13,8 +13,8 @@ cloudnary = Blueprint("cloudnary", __name__)
 ACCOUNT_PREFIX = "cloudinary"
 
 
-@cloudnary.route(f"/{ACCOUNT_PREFIX}/upload", methods=["POST"])
-def upload():
+@cloudnary.route(f"/{ACCOUNT_PREFIX}/manage-file", methods=["POST"])
+def manage_file():
     try:
         data = request.get_json()
         file = data.get("file", None)
@@ -76,7 +76,7 @@ def upload():
 
         if action == "upload":
             print(action, "action from cloudinary")
-            result = cloudinary.uploader.upload_resource(file, **params_to_sign)
+            result = cloudinary.uploader.upload(file, **params_to_sign)
             print(result, "result from cloudinary")
             file_url = result["secure_url"]
 
