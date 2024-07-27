@@ -2,6 +2,7 @@ from extensions import db
 from sqlalchemy.orm import relationship
 from utils import gen_uuid
 from datetime import datetime
+from .projects import Projects
 
 
 class Messages(db.Model):
@@ -12,6 +13,15 @@ class Messages(db.Model):
     author_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=False)
     project_id = db.Column(db.String(50), db.ForeignKey('projects.id'))
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'content': self.content,
+            'date_sent': self.date_sent.strftime("%d %b, %Y"),
+            'author': f"{self.author.last_name.title()} {self.author.first_name.title()}",
+            'project_id': self.project_id
+        }
+
     def save(self):
         db.session.add(self)
         db.session.commit()
@@ -21,3 +31,17 @@ class Messages(db.Model):
 
     def __repr__(self):
         return '<Message %r>' % self.content
+
+
+def create_message(content, author_id, project_id):
+    message = Messages(content=content, author_id=author_id, project_id=project_id)
+    message.save()
+    return message
+
+
+def get_messages(project_id, org_id):
+    messages = Messages.query.join(Projects, Projects.organization_id == org_id).filter(
+        Messages.project_id == project_id
+    ).order_by(Messages.date_sent.desc()).all()
+
+    return messages
