@@ -67,3 +67,7 @@ def get_one_project(project_id, org_id):
 def get_projects(org_id):
     return Projects.query.filter_by(organization_id=org_id).order_by(Projects.date_created.desc()
                                                                      ).all()
+
+
+def is_project_valid(project_id):
+    return Projects.query.filter_by(id=project_id).first()
