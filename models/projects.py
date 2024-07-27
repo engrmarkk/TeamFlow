@@ -25,6 +25,8 @@ class Projects(db.Model):
         }
         if self.tasks:
             proj['tasks'] = [task.to_dict2() for task in self.tasks]
+        if self.document:
+            proj['documents'] = [doc.to_dict() for doc in self.document]
         return proj
 
     def save(self):
