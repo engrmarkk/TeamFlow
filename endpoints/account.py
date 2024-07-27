@@ -643,8 +643,12 @@ def upload_documents_endpoint(project_id):
         from celery_config.utils.cel_workers import send_all_users_email
 
         data = request.get_json()
+
+        # This details will be gotten from the front end after calling the
+        # upload cloudinary endpoint to get the details
         document_name = data.get("document_name")
         document_url = data.get("document_url")
+        public_id = data.get("public_id")
         if not document_name:
             return return_response(
                 HttpStatus.BAD_REQUEST,
@@ -658,6 +662,13 @@ def upload_documents_endpoint(project_id):
                 message="Document URL are required",
             )
 
+        if not public_id:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Cloudinary Public ID is required",
+            )
+
         project = get_one_project(project_id, current_user.organization_id)
         if not project:
             return return_response(
@@ -665,7 +676,7 @@ def upload_documents_endpoint(project_id):
                 status=StatusRes.FAILED,
                 message="Project not found",
             )
-        create_document(document_name, document_url, project_id, current_user.id)
+        create_document(document_name, document_url, project_id, current_user.id, public_id)
         users = get_users_tasks_for_project(project_id)
 
         print(users, "users")
