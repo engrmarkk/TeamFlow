@@ -21,7 +21,7 @@ class Projects(db.Model):
             'name': self.name,
             'description': self.description,
             'date_created': self.date_created,
-            'created_by': f"{self.users.first_name.title()} {self.users.last_name.title()}",
+            'created_by': f"{self.users.last_name.title()} {self.users.first_name.title()}",
         }
         if self.tasks:
             proj['tasks'] = [task.to_dict2() for task in self.tasks]
