@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from sqlalchemy import MetaData
+from flask_socketio import SocketIO
 
 naming_convention = {
     "ix": 'ix_%(column_0_label)s',
@@ -15,5 +16,6 @@ naming_convention = {
 db = SQLAlchemy(metadata=MetaData(naming_convention=naming_convention))
 migrate = Migrate()
 jwt = JWTManager()
+socketio = SocketIO(cors_allowed_origins="*")
 
 cors = CORS()
