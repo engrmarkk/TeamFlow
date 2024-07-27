@@ -8,8 +8,8 @@ from .users import (Users, authenticate, email_exist,
                     get_all_users, get_users_by_organization, get_user_by_id,
                     update_user_role)
 from .projects import (Projects, create_project,
-                       get_one_project, get_projects, update_project)
-from .messages import Messages
+                       get_one_project, get_projects, update_project, is_project_valid)
+from .messages import Messages, create_message, get_messages
 from .notifications import Notifications
 from .documents import Documents, create_document
 from .organizations import *
