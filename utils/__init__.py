@@ -5,6 +5,11 @@ import re
 from random import randint, choice
 import string
 import datetime
+import hmac
+import hashlib
+import base64
+from io import BytesIO
+import time
 
 
 def return_response(status_code, status=None, message=None, **data):
@@ -58,3 +63,29 @@ def generate_random_string(length=20):
 
 def return_user_dict(user):
     return user.to_dict()
+
+
+def convert_binary(base64_file):
+    try:
+        print("got here")
+        binary_data = base64.b64decode(base64_file)
+        # Convert binary data to a file-like object
+        file_like = BytesIO(binary_data)
+        print(file_like, "file_like from convert_binary")
+        return file_like
+    except Exception as e:
+        print(e, "error from convert_binary")
+        return None
+
+
+def generate_signature(params_to_sign, api_secret):
+    try:
+        params_to_sign['timestamp'] = int(time.time())
+        sorted_params = '&'.join([f'{k}={params_to_sign[k]}' for k in sorted(params_to_sign)])
+        to_sign = f'{sorted_params}{api_secret}'
+        signature = hmac.new(api_secret.encode('utf-8'), to_sign.encode('utf-8'), hashlib.sha1).hexdigest()
+        print(signature, "signature from generate_signature")
+        return signature
+    except Exception as e:
+        print(e, "error from generate_signature")
+        return None
