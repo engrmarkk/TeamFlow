@@ -24,6 +24,7 @@ class Users(db.Model):
     messages = relationship('Messages', backref='author', lazy=True)
     notifications = relationship('Notifications', backref='recipient', lazy=True)
     usersession = relationship('UserSession', backref='user', lazy=True, uselist=False)
+    documents = relationship('Documents', backref='user', lazy=True)
 
     def to_dict(self):
         return {
