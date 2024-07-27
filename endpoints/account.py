@@ -15,7 +15,7 @@ from models import (
     create_task,
     create_user,
     update_user_role,
-    get_one_task,
+    get_one_task, get_messages,
     email_exist,
     username_exist,
     create_otp,
@@ -770,6 +770,30 @@ def change_password_endpoint():
 
     except Exception as e:
         print(e, "error@account/change-password")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+# get messages
+@account.route(f"/{ACCOUNT_PREFIX}/get-messages/<project_id>", methods=["GET"])
+@jwt_required()
+@email_verified_required
+def get_all_messages(project_id):
+    try:
+        messages = get_messages(project_id, current_user.organization_id)
+
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Messages Fetched Successfully",
+            data=[msg.to_dict() for msg in messages]
+        )
+
+    except Exception as e:
+        print(e, "error@account/get_all_messages")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
             status=StatusRes.FAILED,
