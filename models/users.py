@@ -183,3 +183,11 @@ def update_user_role(user_id, is_admin, is_super_admin):
     user.is_super_admin = is_super_admin
     user.update()
     return user
+
+
+def change_password(current_user, old_password, new_password):
+    if not hasher.verify(old_password, current_user.password):
+        return False
+    current_user.password = hasher.hash(new_password)
+    current_user.update()
+    return True
