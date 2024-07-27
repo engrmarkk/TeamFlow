@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from models import (
     current_user_info,
     create_project,
-create_document,
+create_document, change_password,
     get_all_users,
     get_users_by_organization,
     create_task,
@@ -194,6 +194,19 @@ def create_user_endpoint():
             status=StatusRes.FAILED,
             message="Network Error",
         )
+
+
+# get user details
+@account.route(f"/{ACCOUNT_PREFIX}/user-details", methods=["GET"])
+@jwt_required()
+@email_verified_required
+def get_user_details_endpoint():
+    return return_response(
+        HttpStatus.OK,
+        status=StatusRes.SUCCESS,
+        message="User Details",
+        user=current_user.to_dict(),
+    )
 
 
 # update user role
@@ -692,6 +705,65 @@ def upload_documents_endpoint(project_id):
 
     except Exception as e:
         print(e, "error@account/upload-documents")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+# change password
+@account.route(f"/{ACCOUNT_PREFIX}/change-password", methods=["POST"])
+@jwt_required()
+@email_verified_required
+def change_password_endpoint():
+    try:
+        data = request.get_json()
+        old_password = data.get("old_password")
+        new_password = data.get("new_password")
+        confirm_password = data.get("confirm_password")
+        if not old_password:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Old password is required",
+            )
+        if not new_password:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="New password is required",
+            )
+        if not confirm_password:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Confirm password is required",
+            )
+
+        if new_password != confirm_password:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Password and confirm password does not match",
+            )
+
+        res = change_password(current_user, old_password, new_password)
+        if not res:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Old password is incorrect",
+            )
+
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Password changed successfully",
+        )
+
+    except Exception as e:
+        print(e, "error@account/change-password")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
             status=StatusRes.FAILED,
