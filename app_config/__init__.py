@@ -1,5 +1,6 @@
 from config import config_obj
-from endpoints import auth as authentication_blueprint, account as account_blueprint
+from endpoints import (auth as authentication_blueprint, account as account_blueprint,
+                       cloudnary as cloudnary_blueprint)
 from flask import Flask
 from extensions import db, migrate, jwt, cors
 from http_status import HttpStatus
@@ -65,6 +66,7 @@ def create_app(config_name='development'):
     # register blueprints
     app.register_blueprint(authentication_blueprint, url_prefix='/api/v1')
     app.register_blueprint(account_blueprint, url_prefix='/api/v1')
+    app.register_blueprint(cloudnary_blueprint, url_prefix='/api/v1')
 
     # load
     return app
