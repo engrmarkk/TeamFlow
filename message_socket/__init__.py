@@ -3,7 +3,7 @@ from flask_socketio import SocketIO, emit, join_room
 from models import create_message, is_project_valid
 from http_status import HttpStatus
 from status_res import StatusRes
-# from flask_jwt_extended import current_user
+from flask_jwt_extended import current_user, jwt_required
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 
@@ -13,8 +13,10 @@ def test_connect_handler():
 
 
 @socketio.on('join-room')
+@jwt_required()
 def on_join(data):
     project_id = data.get('project_id')
+    print(current_user.id, "current_user.id")
     if not is_project_valid(project_id):
         print("Invalid project ID")
         emit('error-message', {
@@ -38,6 +40,7 @@ def error_handler(e):
 
 
 @socketio.on('send-message')
+@jwt_required()
 def send_message(data):
     project_id = data.get('project_id')
     print(project_id, "project_id")
@@ -53,21 +56,13 @@ def send_message(data):
 
     try:
         content = data.get('content', None)
-        author_id = data.get('author_id', None)
+        author_id = current_user.id
 
         if not content:
             emit('error-message', {
                 'status': HttpStatus.BAD_REQUEST,
                 'status_res': StatusRes.FAILED,
                 'message': "Content is required"
-            })
-            return
-
-        if not author_id:
-            emit('error-message', {
-                'status': HttpStatus.BAD_REQUEST,
-                'status_res': StatusRes.FAILED,
-                'message': "Author ID is required"
             })
             return
 
