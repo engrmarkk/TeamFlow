@@ -2,21 +2,23 @@ from config import config_obj
 from endpoints import (auth as authentication_blueprint, account as account_blueprint,
                        cloudnary as cloudnary_blueprint)
 from flask import Flask
-from extensions import db, migrate, jwt, cors, socketio
+from extensions import db, migrate, jwt, cors
 from http_status import HttpStatus
 from utils import return_response
 from status_res import StatusRes
-from models import Users, Projects, Messages, Notifications, Documents, Tasks, Organizations
+from flask_socketio import emit, join_room, SocketIO
+from models import (Users, Projects, Messages, Notifications, Documents, Tasks,
+                    Organizations)
+
+app = Flask(__name__)
 
 
 def create_app(config_name='development'):
-    app = Flask(__name__)
     app.config.from_object(config_obj[config_name])
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    socketio.init_app(app, async_mode='eventlet')
-    cors.init_app(app)
+    cors.init_app(app, resources={r"/socket.io/*": {"origins": "*"}})
 
     # handle 404
     @app.errorhandler(404)
