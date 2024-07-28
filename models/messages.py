@@ -40,6 +40,7 @@ def create_message(content, author_id, project_id):
 
 
 def get_messages(project_id, org_id):
+    print("saving to db")
     messages = Messages.query.join(Projects, Projects.organization_id == org_id).filter(
         Messages.project_id == project_id
     ).order_by(Messages.date_sent.desc()).all()
