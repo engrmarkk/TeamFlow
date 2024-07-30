@@ -4,6 +4,7 @@ from models import create_message, is_project_valid
 from http_status import HttpStatus
 from status_res import StatusRes
 from flask_jwt_extended import current_user, jwt_required
+
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 
