@@ -15,7 +15,6 @@ class Config:
     RESULT_BACKEND = f"redis://{os.environ.get('REDIS_HOST')}:{os.environ.get('REDIS_PORT')}"
     BROKER_URL = f"redis://{os.environ.get('REDIS_HOST')}:{os.environ.get('REDIS_PORT')}"
 
-    print(RESULT_BACKEND, BROKER_URL, "result backend and broker url")
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -24,6 +23,14 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
+class TestConfig(Config):
+    TESTING = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_DATABASE_URI = "sqlite://"
+
+
 config_obj = {
-    'development': DevelopmentConfig
+    'development': DevelopmentConfig,
+    'testing': TestConfig
 }
