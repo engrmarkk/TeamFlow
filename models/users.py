@@ -168,9 +168,14 @@ def get_all_users(organization_id):
 
 
 # get users by organization
-def get_users_by_organization(organization_id):
-    return Users.query.filter_by(organization_id=organization_id).order_by(Users.date_joined.desc()
-                                                                           ).all()
+def get_users_by_organization(organization_id, page, per_page):
+    users = Users.query.filter_by(organization_id=organization_id).order_by(Users.date_joined.desc()
+                                                                           ).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    total_items = users.total
+    total_pages = users.pages
+    return users, total_items, total_pages
 
 
 def get_user_by_id(user_id):
