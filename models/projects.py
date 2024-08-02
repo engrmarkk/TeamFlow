@@ -64,9 +64,13 @@ def get_one_project(project_id, org_id):
     return Projects.query.filter_by(id=project_id, organization_id=org_id).first()
 
 
-def get_projects(org_id):
-    return Projects.query.filter_by(organization_id=org_id).order_by(Projects.date_created.desc()
-                                                                     ).all()
+def get_projects(org_id, page, per_page):
+    projects = Projects.query.filter_by(organization_id=org_id).order_by(Projects.date_created.desc()
+                                                                     ).paginate(
+        page=page, per_page=per_page, error_out=False)
+    total_items = projects.total
+    total_pages = projects.pages
+    return projects, total_items, total_pages
 
 
 def is_project_valid(project_id):
