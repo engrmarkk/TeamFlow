@@ -115,7 +115,9 @@ def get_task(task_id, project_id):
 
 
 def task_assigned_to_user(user_id):
-    tasks = Tasks.query.filter_by(assignee_id=user_id).all()
+    tasks = Tasks.query.filter_by(assignee_id=user_id).order_by(
+        Tasks.date_created.desc()
+    ).limit(10).all()
     all_tasks = [task.to_dict() for task in tasks]
     return all_tasks
 
@@ -132,3 +134,11 @@ def get_users_tasks_for_project(project_id):
     tasks = Tasks.query.filter_by(project_id=project_id).all()
     users = [task.assignee.to_dict() for task in tasks if task.assignee is not None]
     return users
+
+
+def statistics(user_id):
+    total_tasks = Tasks.query.filter_by(assignee_id=user_id).count()
+    completed_tasks = Tasks.query.filter_by(assignee_id=user_id, completed=True).count()
+    not_started_tasks = Tasks.query.filter_by(assignee_id=user_id, status="To Do").count()
+    in_progress_tasks = Tasks.query.filter_by(assignee_id=user_id, status="In Progress").count()
+    return total_tasks, completed_tasks, not_started_tasks, in_progress_tasks
