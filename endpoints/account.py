@@ -21,6 +21,7 @@ from models import (
     create_otp,
     get_users_tasks_for_project,
     get_task,
+statistics,
     update_task,
     update_project,
     get_one_project,
@@ -41,6 +42,8 @@ ACCOUNT_PREFIX = "account"
 @jwt_required()
 @email_verified_required
 def dashboard():
+    (total_tasks, completed_tasks, not_started_tasks,
+     in_progress_tasks) = statistics(current_user.id)
     return return_response(
         HttpStatus.OK,
         status=StatusRes.SUCCESS,
@@ -52,6 +55,12 @@ def dashboard():
             else "admin" if current_user.is_admin else "user"
         ),
         taks=task_assigned_to_user(current_user.id),
+        statistics={
+            "total_tasks": total_tasks,
+            "completed_tasks": completed_tasks,
+            "not_started_tasks": not_started_tasks,
+            "in_progress_tasks": in_progress_tasks
+        }
     )
 
 
@@ -62,13 +71,19 @@ def dashboard():
 # super admin required
 @super_admin_required
 def get_all_users_endpoint():
-    users = get_users_by_organization(current_user.organization_id)
+    page = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 10))
+    users, total_items, total_pages = get_users_by_organization(current_user.organization_id, page, per_page)
     return return_response(
         HttpStatus.OK,
         status=StatusRes.SUCCESS,
         message="All Users",
         users=[return_user_dict(user) for user in users],
         organization=current_user.organization.name.title(),
+        total_items=total_items,
+        total_pages=total_pages,
+        page=page,
+        per_page=per_page
     )
 
 
@@ -350,6 +365,8 @@ def update_project_endpoint(project_id):
 @email_verified_required
 def get_projects_endpoint():
     try:
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
         project_id = request.args.get("project_id")
         if project_id:
             project = get_one_project(project_id, current_user.organization_id)
@@ -366,12 +383,16 @@ def get_projects_endpoint():
                 project=project.to_dict(),
             )
 
-        projects = get_projects(current_user.organization_id)
+        projects, total_items, total_pages = get_projects(current_user.organization_id, page, per_page)
         return return_response(
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
             message="Projects fetched successfully",
-            projects=[project.to_dict() for project in projects],
+            projects=[project.to_dict() for project in projects.items],
+            page=page,
+            per_page=per_page,
+            total_pages=total_pages,
+            total_items=total_items
         )
 
     except Exception as e:
