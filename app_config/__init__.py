@@ -6,7 +6,6 @@ from extensions import db, migrate, jwt, cors
 from http_status import HttpStatus
 from utils import return_response
 from status_res import StatusRes
-from flask_socketio import emit, join_room, SocketIO
 from models import (Users, Projects, Messages, Notifications, Documents, Tasks,
                     Organizations)
 
