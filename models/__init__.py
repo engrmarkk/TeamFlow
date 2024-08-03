@@ -6,7 +6,7 @@ from .users import (Users, authenticate, email_exist,
                     create_otp, get_user_by_email, create_reset_p,
                     get_user_by_reset_p, update_password, current_user_info,
                     get_all_users, get_users_by_organization, get_user_by_id,
-                    update_user_role)
+                    update_user_role, UserSession)
 from .projects import (Projects, create_project,
                        get_one_project, get_projects, update_project, is_project_valid)
 from .messages import Messages, create_message, get_messages
