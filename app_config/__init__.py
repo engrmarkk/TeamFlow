@@ -2,7 +2,7 @@ from config import config_obj
 from endpoints import (auth as authentication_blueprint, account as account_blueprint,
                        cloudnary as cloudnary_blueprint)
 from flask import Flask
-from extensions import db, migrate, jwt, cors
+from extensions import db, migrate, jwt, cors, socketio
 from http_status import HttpStatus
 from utils import return_response
 from status_res import StatusRes
@@ -15,8 +15,11 @@ def create_app(config_name='development'):
     app.config.from_object(config_obj[config_name])
     db.init_app(app)
     migrate.init_app(app, db)
+    socketio.init_app(app)
     jwt.init_app(app)
     cors.init_app(app, resources={r"/socket.io/*": {"origins": "*"}})
+
+    app.socketio = socketio
 
     # handle 404
     @app.errorhandler(404)
