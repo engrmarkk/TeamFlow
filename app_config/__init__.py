@@ -9,10 +9,9 @@ from status_res import StatusRes
 from models import (Users, Projects, Messages, Notifications, Documents, Tasks,
                     Organizations)
 
-app = Flask(__name__)
-
 
 def create_app(config_name='development'):
+    app = Flask(__name__)
     app.config.from_object(config_obj[config_name])
     db.init_app(app)
     migrate.init_app(app, db)
