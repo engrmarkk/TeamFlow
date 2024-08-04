@@ -19,8 +19,6 @@ def create_app(config_name='development'):
     jwt.init_app(app)
     cors.init_app(app, resources={r"/socket.io/*": {"origins": "*"}})
 
-    app.socketio = socketio
-
     # handle 404
     @app.errorhandler(404)
     def not_found(error):
