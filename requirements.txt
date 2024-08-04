@@ -31,7 +31,7 @@ passlib==1.7.4
 prompt-toolkit==3.0.47
 psycopg2-binary==2.9.9
 PyJWT==2.8.0
-# pytest==7.2.1
+pytest==7.2.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 redis==5.0.7
