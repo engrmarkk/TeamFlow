@@ -13,14 +13,19 @@ class Messages(db.Model):
     author_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=False)
     project_id = db.Column(db.String(50), db.ForeignKey('projects.id'))
 
-    def to_dict(self):
-        return {
+    def to_dict(self, current_user_id=None):
+        msgs = {
             'id': self.id,
             'content': self.content,
             'date_sent': self.date_sent.strftime("%d %b, %Y"),
             'author': f"{self.author.last_name.title()} {self.author.first_name.title()}",
-            'project_id': self.project_id
+            'project_id': self.project_id,
         }
+
+        if current_user_id:
+            msgs['is_author'] = current_user_id == self.author_id
+
+        return msgs
 
     def save(self):
         db.session.add(self)
@@ -40,9 +45,9 @@ def create_message(content, author_id, project_id):
 
 
 def get_messages(project_id, org_id):
-    print("saving to db")
+    print("getting messages from db")
     messages = Messages.query.join(Projects, Projects.organization_id == org_id).filter(
         Messages.project_id == project_id
-    ).order_by(Messages.date_sent.desc()).all()
+    ).order_by(Messages.date_sent.asc()).all()
 
     return messages
