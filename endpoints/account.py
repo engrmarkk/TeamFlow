@@ -810,7 +810,7 @@ def get_all_messages(project_id):
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
             message="Messages Fetched Successfully",
-            data=[msg.to_dict() for msg in messages]
+            data=[msg.to_dict(current_user.id) for msg in messages]
         )
 
     except Exception as e:
