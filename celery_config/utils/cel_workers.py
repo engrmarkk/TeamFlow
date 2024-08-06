@@ -1,13 +1,12 @@
-from celery import Celery
 from app_config import create_app
 from celery import Celery, shared_task
 from flask import render_template_string
-# import celeryConfig
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import os
 from datetime import datetime
+import celery_config.schedule_config as celeryConfig
 
 app = create_app()
 
@@ -22,7 +21,7 @@ def make_celery(app=app):
         broker=app.config["BROKER_URL"],
     )
     celery.conf.update(app.config)
-    # celery.config_from_object(celeryConfig)
+    celery.config_from_object(celeryConfig)
 
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
