@@ -17,8 +17,8 @@ def make_celery(app=app):
     """
     celery = Celery(
         app.import_name,
-        backend=app.config["RESULT_BACKEND"],
-        broker=app.config["BROKER_URL"],
+        backend=f"redis://{os.environ.get('REDIS_HOST')}:{os.environ.get('REDIS_PORT')}",
+        broker=f"redis://{os.environ.get('REDIS_HOST')}:{os.environ.get('REDIS_PORT')}",
     )
     celery.conf.update(app.config)
     celery.config_from_object(celeryConfig)
