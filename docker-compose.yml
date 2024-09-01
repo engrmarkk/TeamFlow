@@ -41,6 +41,18 @@ services:
     ports:
       - 6380:6380
 
+  nginx:
+    image: nginx:latest
+    container_name: teamflow-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - teamflow_network
+
 networks:
   teamflow_network:
     external: true
