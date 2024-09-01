@@ -12,8 +12,6 @@ class Config:
     JWT_SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
     # expiring time
     JWT_ACCESS_TOKEN_EXPIRES = 3600
-    RESULT_BACKEND = f"redis://{os.environ.get('REDIS_HOST')}:{os.environ.get('REDIS_PORT')}"
-    BROKER_URL = f"redis://{os.environ.get('REDIS_HOST')}:{os.environ.get('REDIS_PORT')}"
 
 
 class DevelopmentConfig(Config):
