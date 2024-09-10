@@ -5,12 +5,17 @@ ENV FLASK_APP=runserver.py
 
 # Install dependencies needed to build psycopg2
 RUN apk update && apk add --no-cache \
-    postgresql-dev \
     gcc \
-    python3-dev \
     musl-dev \
+    python3-dev \
+    postgresql-dev \
+    libc-dev \
+    libffi-dev \
+    openssl-dev \
+    build-base \
     tzdata \
-    libc-dev
+    && apk add --virtual build-deps gcc musl-dev python3-dev libffi-dev \
+    && pip install --upgrade pip
 
 WORKDIR /app
 COPY requirements.txt /app
