@@ -5,8 +5,9 @@ from status_res import StatusRes
 from flask_jwt_extended import current_user, jwt_required
 from utils import is_valid_email
 from sqlalchemy.exc import IntegrityError
+from pusher_conn import pusher_client
 from models import (
-    current_user_info,
+    current_user_info, is_project_valid, create_message,
     create_project,
     create_document,
     change_password,
@@ -32,6 +33,8 @@ statistics,
 )
 from decorators import email_verified_required, super_admin_required
 from datetime import datetime
+from flask_socketio import emit, join_room
+import traceback
 
 account = Blueprint("account", __name__)
 
@@ -815,6 +818,118 @@ def get_all_messages(project_id):
 
     except Exception as e:
         print(e, "error@account/get_all_messages")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+# This is for flask_socket IO
+@account.route(f'/{ACCOUNT_PREFIX}/send_message', methods=['POST'])
+@jwt_required()
+def send_message_project():
+    data = request.json
+    project_id = data.get('project_id')
+    print(project_id, "project_id")
+
+    if not project_id:
+        return return_response(
+            HttpStatus.BAD_REQUEST,
+            status=StatusRes.FAILED,
+            message="Project ID is required",
+        )
+
+    if not is_project_valid(project_id):
+        print("Invalid project ID")
+        return return_response(
+            HttpStatus.BAD_REQUEST,
+            status=StatusRes.FAILED,
+            message="Invalid project ID",
+        )
+
+    try:
+        join_room(project_id)
+        content = data.get('content', None)
+        author_id = current_user.id
+
+        if not content:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Content is required",
+            )
+
+        # Save the message to the database
+        msg = create_message(content, author_id, project_id)
+        if not msg:
+            raise Exception("Network Error")
+
+        emit('receive-message', msg.to_dict(), room=project_id)
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Message sent",
+        )
+
+    except Exception as e:
+        print(traceback.format_exc(), "error@send-message TRACEBACK")
+        print(e, "error@send-message")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+@account.route(f'/{ACCOUNT_PREFIX}/send-message', methods=['POST'])
+@jwt_required()
+def send_message():
+    data = request.json
+    project_id = data.get('project_id')
+    print(project_id, "project_id")
+
+    if not project_id:
+        return return_response(
+            HttpStatus.BAD_REQUEST,
+            status=StatusRes.FAILED,
+            message="Project ID is required",
+        )
+
+    if not is_project_valid(project_id):
+        print("Invalid project ID")
+        return return_response(
+            HttpStatus.BAD_REQUEST,
+            status=StatusRes.FAILED,
+            message="Invalid project ID",
+        )
+
+    try:
+        content = data.get('content', None)
+        author_id = current_user.id
+
+        if not content:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Content is required",
+            )
+
+        # Save the message to the database
+        msg = create_message(content, author_id, project_id)
+        if not msg:
+            raise Exception("Network Error")
+
+        # Trigger the message to the Pusher channel (room)
+        pusher_client.trigger(project_id, 'receive-message', msg.to_dict())
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Message sent",
+        )
+
+    except Exception as e:
+        print(e, "error@send-message")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
             status=StatusRes.FAILED,
