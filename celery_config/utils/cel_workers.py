@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 import os
 from datetime import datetime
 import celery_config.schedule_config as celeryConfig
+import traceback
 
 app = create_app()
 
@@ -76,6 +77,7 @@ def send_mail(context):
         return "Mail sent successfully"
 
     except Exception as e:
+        print(traceback.format_exc(), "error@celery/send_mail")
         print(e, "error@celery/send_mail")
         return "Failed to send mail"
 
