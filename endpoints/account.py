@@ -825,63 +825,7 @@ def get_all_messages(project_id):
         )
 
 
-# This is for flask_socket IO
-@account.route(f'/{ACCOUNT_PREFIX}/send_message', methods=['POST'])
-@jwt_required()
-def send_message_project():
-    data = request.json
-    project_id = data.get('project_id')
-    print(project_id, "project_id")
-
-    if not project_id:
-        return return_response(
-            HttpStatus.BAD_REQUEST,
-            status=StatusRes.FAILED,
-            message="Project ID is required",
-        )
-
-    if not is_project_valid(project_id):
-        print("Invalid project ID")
-        return return_response(
-            HttpStatus.BAD_REQUEST,
-            status=StatusRes.FAILED,
-            message="Invalid project ID",
-        )
-
-    try:
-        join_room(project_id)
-        content = data.get('content', None)
-        author_id = current_user.id
-
-        if not content:
-            return return_response(
-                HttpStatus.BAD_REQUEST,
-                status=StatusRes.FAILED,
-                message="Content is required",
-            )
-
-        # Save the message to the database
-        msg = create_message(content, author_id, project_id)
-        if not msg:
-            raise Exception("Network Error")
-
-        emit('receive-message', msg.to_dict(), room=project_id)
-        return return_response(
-            HttpStatus.OK,
-            status=StatusRes.SUCCESS,
-            message="Message sent",
-        )
-
-    except Exception as e:
-        print(traceback.format_exc(), "error@send-message TRACEBACK")
-        print(e, "error@send-message")
-        return return_response(
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            status=StatusRes.FAILED,
-            message="Network Error",
-        )
-
-
+# This is for pusher
 @account.route(f'/{ACCOUNT_PREFIX}/send-message', methods=['POST'])
 @jwt_required()
 def send_message():
