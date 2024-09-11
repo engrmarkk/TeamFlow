@@ -21,6 +21,7 @@ from models import (
     check_if_org_exist, create_org
 )
 from datetime import datetime
+import traceback
 
 auth = Blueprint("auth", __name__)
 
@@ -319,6 +320,7 @@ def resend_otp():
             HttpStatus.OK, status=StatusRes.SUCCESS, message="OTP sent successfully"
         )
     except Exception as e:
+        print(traceback.format_exc(), "error@auth/resend-otp TRACEBACK")
         print(e, "error@auth/resend-otp")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
