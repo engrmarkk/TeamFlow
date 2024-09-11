@@ -25,6 +25,9 @@ EXPOSE 7000
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
+
 #CMD ["python", "runserver.py"]
-CMD ["gunicorn", "-b", "0.0.0.0:7000", "-w", "4", "runserver:app"]     # for (celery)
+#CMD ["gunicorn", "-b", "0.0.0.0:7000", "-w", "4", "runserver:app"]     # for (celery)
 #CMD ["gunicorn", "-b", "0.0.0.0:7000", "-w", "4", "-k", "eventlet", "runserver:app"] # for websocket
+
+CMD ["gunicorn", "-b", "0.0.0.0:7000", "-w", "4", "-k", "gthread", "--threads", "2", "runserver:app"]
