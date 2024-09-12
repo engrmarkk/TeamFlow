@@ -33,3 +33,28 @@ def check_pending_tasks():
             send_mail.delay(payload)
 
     return True
+
+
+# update task to expired if the due date has passed
+@shared_task
+def update_expired_tasks():
+    print("Updating Expired Tasks")
+    tasks = Tasks.query.filter(or_(Tasks.status == "To Do", Tasks.status == "In Progress")).all()
+    for task in tasks:
+        if task.due_date < datetime.now():
+            task.status = "Expired"
+            task.update()
+            payload = {
+                "email": task.assignee.email,
+                "subject": "Expired Task",
+                "template_name": "expired.html",
+                "name": f"{task.assignee.last_name.title()} {task.assignee.first_name.title()}",
+                "task": task.title.title(),
+                "due_date": task.due_date.strftime("%d-%b-%Y"),
+                "project_name": task.project.name.title(),
+                "status": task.status,
+                "date": datetime.now().strftime("%d-%b-%Y %H:%M:%S"),
+            }
+            send_mail.delay(payload)
+
+    return True
