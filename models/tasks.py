@@ -4,6 +4,7 @@ from utils import gen_uuid
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from .projects import Projects
+from sqlalchemy import func
 
 
 class Tasks(db.Model):
@@ -34,7 +35,7 @@ class Tasks(db.Model):
                 'date_created': self.project.date_created.strftime("%d %b, %Y")
             },
             'assigned_to': f"{self.assignee.last_name.title()} {self.assignee.first_name.title()}",
-            'date_created': self.date_created,
+            'date_created': self.date_created.strftime("%d %b, %Y"),
             'due_date': self.due_date.strftime("%d %b, %Y"),
             'completed': self.completed
         }
@@ -53,7 +54,24 @@ class Tasks(db.Model):
             'project_id': self.project_id,
             'assignee_id': self.assignee_id,
             'assigned_to': f"{self.assignee.last_name.title()} {self.assignee.first_name.title()}",
-            'date_created': self.date_created,
+            'date_created': self.date_created.strftime("%d %b, %Y"),
+            'due_date': self.due_date.strftime("%d %b, %Y"),
+            'completed': self.completed
+        }
+
+        # add completed_at if completed
+        if self.completed:
+            task['completed_at'] = self.completed_at.strftime("%d %b, %Y")
+        return task
+
+    def user_task_dict(self):
+        task = {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'status': self.status,
+            'project_id': self.project_id,
+            'date_created': self.date_created.strftime("%d %b, %Y"),
             'due_date': self.due_date.strftime("%d %b, %Y"),
             'completed': self.completed
         }
@@ -105,8 +123,13 @@ def update_task(task_id, title, description, status, project_id, assignee_id, du
     return None
 
 
-def get_task_for_project(project_id):
-    return Tasks.query.filter_by(project_id=project_id).all()
+def get_task_for_project(project_id, status, start_date, end_date, page, per_page):
+    return (Tasks.query.filter(Tasks.project_id == project_id,
+                               Tasks.status == status if status else True,
+                               func.DATE(Tasks.date_created) >= start_date if start_date else True,
+                               func.DATE(Tasks.date_created) <= end_date if end_date else True).order_by(
+        Tasks.date_created.desc()).paginate(
+        page=page, per_page=per_page, error_out=False))
 
 
 # get a task by id
@@ -120,6 +143,15 @@ def task_assigned_to_user(user_id):
     ).limit(10).all()
     all_tasks = [task.to_dict() for task in tasks]
     return all_tasks
+
+
+def get_tasks_for_user(user_id, status, start_date, end_date, page, per_page):
+    return Tasks.query.filter(Tasks.assignee_id == user_id,
+                              func.lower(Tasks.status) == status.lower() if status else True,
+                              func.DATE(Tasks.date_created) >= start_date if start_date else True,
+                              func.DATE(Tasks.date_created) <= end_date if end_date else True).order_by(
+        Tasks.date_created.desc()).paginate(
+        page=page, per_page=per_page, error_out=False)
 
 
 def get_one_task(task_id, org_id):
@@ -141,4 +173,5 @@ def statistics(user_id):
     completed_tasks = Tasks.query.filter_by(assignee_id=user_id, completed=True).count()
     not_started_tasks = Tasks.query.filter_by(assignee_id=user_id, status="To Do").count()
     in_progress_tasks = Tasks.query.filter_by(assignee_id=user_id, status="In Progress").count()
-    return total_tasks, completed_tasks, not_started_tasks, in_progress_tasks
+    expired_tasks = Tasks.query.filter_by(assignee_id=user_id, status="Expired").count()
+    return total_tasks, completed_tasks, not_started_tasks, in_progress_tasks, expired_tasks
