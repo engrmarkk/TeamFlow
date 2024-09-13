@@ -5,20 +5,20 @@ from datetime import datetime, timedelta
 
 
 class Organizations(db.Model):
-    __tablename__ = 'organizations'
+    __tablename__ = "organizations"
     id = db.Column(db.String(50), primary_key=True, default=gen_uuid)
     name = db.Column(db.String(80), unique=True, nullable=False)
     description = db.Column(db.String(255), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.now())
-    users = relationship('Users', backref='organization')
-    projects = relationship('Projects', backref='organization')
+    users = relationship("Users", backref="organization")
+    projects = relationship("Projects", backref="organization")
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'date_created': self.date_created
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "date_created": self.date_created,
         }
 
     def save(self):
@@ -29,7 +29,7 @@ class Organizations(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return '<Organizations %r>' % self.name
+        return "<Organizations %r>" % self.name
 
 
 def create_org(name, description):
