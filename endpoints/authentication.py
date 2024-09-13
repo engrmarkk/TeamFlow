@@ -18,7 +18,8 @@ from models import (
     create_reset_p,
     get_user_by_reset_p,
     update_password,
-    check_if_org_exist, create_org
+    check_if_org_exist,
+    create_org,
 )
 from datetime import datetime
 import traceback
@@ -149,7 +150,9 @@ def register():
 
         if not is_valid_email(email):
             return return_response(
-                HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message="Invalid Email Format"
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Invalid Email Format",
             )
 
         val_pass = validate_password(password)
@@ -181,8 +184,16 @@ def register():
 
         org_id = create_org(organization_name, organization_desc.lower())
 
-        user = create_user(first_name, last_name, username, email, password, org_id,
-                           is_super_admin=True, is_admin=True)
+        user = create_user(
+            first_name,
+            last_name,
+            username,
+            email,
+            password,
+            org_id,
+            is_super_admin=True,
+            is_admin=True,
+        )
         usersession = create_otp(user.id)
         otp = usersession.otp
         print(otp, "otp")
@@ -235,7 +246,9 @@ def verify_email():
         # to check if email is in a valid format
         if not is_valid_email(email):
             return return_response(
-                HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message="Invalid Email Format"
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="Invalid Email Format",
             )
         user = get_user_by_email(email.lower())
         if not user:
