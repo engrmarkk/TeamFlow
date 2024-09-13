@@ -5,11 +5,11 @@ from datetime import datetime
 
 
 class Notifications(db.Model):
-    __tablename__ = 'notifications'
+    __tablename__ = "notifications"
     id = db.Column(db.String(50), primary_key=True, default=gen_uuid)
     message = db.Column(db.Text, nullable=False)
     date_sent = db.Column(db.DateTime, default=datetime.now())
-    recipient_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=False)
+    recipient_id = db.Column(db.String(50), db.ForeignKey("users.id"), nullable=False)
     read = db.Column(db.Boolean, default=False)
 
     def save(self):
@@ -20,4 +20,4 @@ class Notifications(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return '<Notifications %r>' % self.message
+        return "<Notifications %r>" % self.message
