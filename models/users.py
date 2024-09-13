@@ -6,7 +6,7 @@ from passlib.hash import pbkdf2_sha256 as hasher
 
 
 class Users(db.Model):
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
     id = db.Column(db.String(50), primary_key=True, default=gen_uuid)
     first_name = db.Column(db.String(100), nullable=False)
@@ -18,28 +18,30 @@ class Users(db.Model):
     email_verified = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
     is_super_admin = db.Column(db.Boolean, default=False)
-    organization_id = db.Column(db.String(50), db.ForeignKey('organizations.id'), nullable=True)
-    projects = relationship('Projects', backref='users')
-    tasks = relationship('Tasks', backref='assignee', lazy=True)
-    messages = relationship('Messages', backref='author', lazy=True)
-    notifications = relationship('Notifications', backref='recipient', lazy=True)
-    usersession = relationship('UserSession', backref='user', lazy=True, uselist=False)
-    documents = relationship('Documents', backref='user', lazy=True)
+    organization_id = db.Column(
+        db.String(50), db.ForeignKey("organizations.id"), nullable=True
+    )
+    projects = relationship("Projects", backref="users")
+    tasks = relationship("Tasks", backref="assignee", lazy=True)
+    messages = relationship("Messages", backref="author", lazy=True)
+    notifications = relationship("Notifications", backref="recipient", lazy=True)
+    usersession = relationship("UserSession", backref="user", lazy=True, uselist=False)
+    documents = relationship("Documents", backref="user", lazy=True)
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'first_name': self.first_name.title(),
-            'last_name': self.last_name.title(),
-            'username': self.username.title(),
-            'email': self.email,
-            'date_joined': self.date_joined.strftime("%d %b, %Y"),
-            'email_verified': self.email_verified,
-            'role': (
-                "super_admin" if self.is_super_admin
-                else "admin" if self.is_admin
-                else "user"
-            )
+            "id": self.id,
+            "first_name": self.first_name.title(),
+            "last_name": self.last_name.title(),
+            "username": self.username.title(),
+            "email": self.email,
+            "date_joined": self.date_joined.strftime("%d %b, %Y"),
+            "email_verified": self.email_verified,
+            "role": (
+                "super_admin"
+                if self.is_super_admin
+                else "admin" if self.is_admin else "user"
+            ),
         }
 
     def save(self):
@@ -50,15 +52,15 @@ class Users(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return '<Users %r>' % self.username
+        return "<Users %r>" % self.username
 
 
 # otp session
 class UserSession(db.Model):
-    __tablename__ = 'user_session'
+    __tablename__ = "user_session"
 
     id = db.Column(db.String(50), primary_key=True, default=gen_uuid)
-    user_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.String(50), db.ForeignKey("users.id"), nullable=False)
     reset_p = db.Column(db.String(50), nullable=True)
     otp = db.Column(db.String(6), nullable=True)
     otp_expiry = db.Column(db.DateTime, nullable=True)
@@ -96,11 +98,26 @@ def username_exist(username):
     return False
 
 
-def create_user(first_name, last_name, username, email, password, organization_id, is_admin, is_super_admin):
-    user = Users(first_name=first_name,
-                 last_name=last_name, username=username,
-                 email=email, password=hasher.hash(password), organization_id=organization_id,
-                 is_admin=is_admin, is_super_admin=is_super_admin)
+def create_user(
+    first_name,
+    last_name,
+    username,
+    email,
+    password,
+    organization_id,
+    is_admin,
+    is_super_admin,
+):
+    user = Users(
+        first_name=first_name,
+        last_name=last_name,
+        username=username,
+        email=email,
+        password=hasher.hash(password),
+        organization_id=organization_id,
+        is_admin=is_admin,
+        is_super_admin=is_super_admin,
+    )
     user.save()
     return user
 
@@ -130,7 +147,9 @@ def create_reset_p(user_id):
         usersession.reset_p_expiry = expiry
         usersession.update()
     else:
-        usersession = UserSession(user_id=user_id, reset_p=reset_p, reset_p_expiry=expiry)
+        usersession = UserSession(
+            user_id=user_id, reset_p=reset_p, reset_p_expiry=expiry
+        )
         usersession.save()
     return usersession
 
@@ -158,7 +177,7 @@ def current_user_info(user):
         "last_name": user.last_name.title(),
         "username": user.username,
         "email": user.email,
-        "email_verified": user.email_verified
+        "email_verified": user.email_verified,
     }
 
 
@@ -169,9 +188,10 @@ def get_all_users(organization_id):
 
 # get users by organization
 def get_users_by_organization(organization_id, page, per_page):
-    users = Users.query.filter_by(organization_id=organization_id).order_by(Users.date_joined.desc()
-                                                                           ).paginate(
-        page=page, per_page=per_page, error_out=False
+    users = (
+        Users.query.filter_by(organization_id=organization_id)
+        .order_by(Users.date_joined.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
     )
     total_items = users.total
     total_pages = users.pages
