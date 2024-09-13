@@ -14,4 +14,8 @@ CELERYBEAT_SCHEDULE = {
         'task': 'celery_config.cron_job.jobs.check_pending_tasks',
         'schedule': crontab(minute=28, hour=20),
     },
+    'update_expired_task': {
+        'task': 'celery_config.cron_job.jobs.update_expired_tasks',
+        'schedule': crontab(minute=30, hour=00),
+    },
 }
