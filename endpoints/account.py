@@ -7,7 +7,9 @@ from utils import is_valid_email
 from sqlalchemy.exc import IntegrityError
 from pusher_conn import pusher_client
 from models import (
-    current_user_info, is_project_valid, create_message,
+    current_user_info,
+    is_project_valid,
+    create_message,
     create_project,
     create_document,
     change_password,
@@ -16,13 +18,15 @@ from models import (
     create_task,
     create_user,
     update_user_role,
-    get_one_task, get_messages,
+    get_one_task,
+    get_messages,
     email_exist,
     username_exist,
     create_otp,
     get_users_tasks_for_project,
     get_task,
-statistics,
+    statistics,
+    get_tasks_for_user,
     update_task,
     update_project,
     get_one_project,
@@ -45,26 +49,40 @@ ACCOUNT_PREFIX = "account"
 @jwt_required()
 @email_verified_required
 def dashboard():
-    (total_tasks, completed_tasks, not_started_tasks,
-     in_progress_tasks) = statistics(current_user.id)
-    return return_response(
-        HttpStatus.OK,
-        status=StatusRes.SUCCESS,
-        message="User Dashboard",
-        user_info=current_user_info(current_user),
-        role=(
-            "super_admin"
-            if current_user.is_super_admin
-            else "admin" if current_user.is_admin else "user"
-        ),
-        taks=task_assigned_to_user(current_user.id),
-        statistics={
-            "total_tasks": total_tasks,
-            "completed_tasks": completed_tasks,
-            "not_started_tasks": not_started_tasks,
-            "in_progress_tasks": in_progress_tasks
-        }
-    )
+    try:
+        (
+            total_tasks,
+            completed_tasks,
+            not_started_tasks,
+            in_progress_tasks,
+            expired_tasks,
+        ) = statistics(current_user.id)
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="User Dashboard",
+            user_info=current_user_info(current_user),
+            role=(
+                "super_admin"
+                if current_user.is_super_admin
+                else "admin" if current_user.is_admin else "user"
+            ),
+            tasks=task_assigned_to_user(current_user.id),
+            statistics={
+                "total_tasks": total_tasks,
+                "completed_tasks": completed_tasks,
+                "not_started_tasks": not_started_tasks,
+                "in_progress_tasks": in_progress_tasks,
+                "expired_tasks": expired_tasks,
+            },
+        )
+    except Exception as e:
+        print(e, "error@account/dashboard")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
 
 
 # get staffs/users
@@ -74,20 +92,30 @@ def dashboard():
 # super admin required
 @super_admin_required
 def get_all_users_endpoint():
-    page = int(request.args.get("page", 1))
-    per_page = int(request.args.get("per_page", 10))
-    users, total_items, total_pages = get_users_by_organization(current_user.organization_id, page, per_page)
-    return return_response(
-        HttpStatus.OK,
-        status=StatusRes.SUCCESS,
-        message="All Users",
-        users=[return_user_dict(user) for user in users],
-        organization=current_user.organization.name.title(),
-        total_items=total_items,
-        total_pages=total_pages,
-        page=page,
-        per_page=per_page
-    )
+    try:
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+        users, total_items, total_pages = get_users_by_organization(
+            current_user.organization_id, page, per_page
+        )
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="All Users",
+            users=[return_user_dict(user) for user in users],
+            organization=current_user.organization.name.title(),
+            total_items=total_items,
+            total_pages=total_pages,
+            page=page,
+            per_page=per_page,
+        )
+    except Exception as e:
+        print(e, "error@account/users")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
 
 
 @account.route(f"/{ACCOUNT_PREFIX}/create-user", methods=["POST"])
@@ -386,7 +414,9 @@ def get_projects_endpoint():
                 project=project.to_dict(),
             )
 
-        projects, total_items, total_pages = get_projects(current_user.organization_id, page, per_page)
+        projects, total_items, total_pages = get_projects(
+            current_user.organization_id, page, per_page
+        )
         return return_response(
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
@@ -395,7 +425,7 @@ def get_projects_endpoint():
             page=page,
             per_page=per_page,
             total_pages=total_pages,
-            total_items=total_items
+            total_items=total_items,
         )
 
     except Exception as e:
@@ -527,19 +557,24 @@ def create_task_endpoint():
 @email_verified_required
 def get_tasks_endpoint(project_id):
     try:
-        tasks = get_task_for_project(project_id)
-        if not tasks:
-            return return_response(
-                HttpStatus.OK,
-                status=StatusRes.SUCCESS,
-                message="Tasks fetched successfully",
-                tasks=[],
-            )
+        status = request.args.get("status")
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+        tasks = get_task_for_project(
+            project_id, status, start_date, end_date, page, per_page
+        )
+
         return return_response(
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
             message="Tasks fetched successfully",
-            tasks=[task.to_dict2() for task in tasks],
+            tasks=[task.to_dict2() for task in tasks.items],
+            page=page,
+            per_page=per_page,
+            total_pages=tasks.pages,
+            total_items=tasks.total,
         )
     except IntegrityError as e:
         print(e, "error@account/get-tasks")
@@ -551,6 +586,56 @@ def get_tasks_endpoint(project_id):
 
     except Exception as e:
         print(e, "error@account/get-tasks")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+# get tasks for a user
+@account.route(f"/{ACCOUNT_PREFIX}/get-user-tasks", methods=["GET"])
+@jwt_required()
+@email_verified_required
+def get_user_tasks_endpoint():
+    try:
+        status = request.args.get("status")
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+        page = int(request.args.get("page", 1))
+        per_page = int(request.args.get("per_page", 10))
+
+        if start_date:
+            start_date = datetime.strptime(start_date, "%d-%m-%Y")
+        if end_date:
+            end_date = datetime.strptime(end_date, "%d-%m-%Y")
+
+        tasks = get_tasks_for_user(
+            current_user.id, status, start_date, end_date, page, per_page
+        )
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Tasks fetched successfully",
+            tasks=[task.user_task_dict() for task in tasks.items],
+            page=page,
+            per_page=per_page,
+            total_pages=tasks.pages,
+            total_items=tasks.total,
+        )
+
+    except ValueError as e:
+        print(traceback.format_exc())
+        print(e, "error@account/get-user-tasks")
+        return return_response(
+            HttpStatus.BAD_REQUEST,
+            status=StatusRes.FAILED,
+            message="Invalid date format, should be dd-mm-yyyy",
+        )
+
+    except Exception as e:
+        print(traceback.format_exc())
+        print(e, "error@account/get-user-tasks")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
             status=StatusRes.FAILED,
@@ -813,7 +898,7 @@ def get_all_messages(project_id):
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
             message="Messages Fetched Successfully",
-            data=[msg.to_dict(current_user.id) for msg in messages]
+            data=[msg.to_dict(current_user.id) for msg in messages],
         )
 
     except Exception as e:
@@ -826,11 +911,11 @@ def get_all_messages(project_id):
 
 
 # This is for pusher
-@account.route(f'/{ACCOUNT_PREFIX}/send-message', methods=['POST'])
+@account.route(f"/{ACCOUNT_PREFIX}/send-message", methods=["POST"])
 @jwt_required()
 def send_message():
     data = request.json
-    project_id = data.get('project_id')
+    project_id = data.get("project_id")
     print(project_id, "project_id")
 
     if not project_id:
@@ -849,7 +934,7 @@ def send_message():
         )
 
     try:
-        content = data.get('content', None)
+        content = data.get("content", None)
         author_id = current_user.id
 
         if not content:
@@ -865,7 +950,7 @@ def send_message():
             raise Exception("Network Error")
 
         # Trigger the message to the Pusher channel (room)
-        pusher_client.trigger(project_id, 'receive-message', msg.to_dict())
+        pusher_client.trigger(project_id, "receive-message", msg.to_dict())
         return return_response(
             HttpStatus.OK,
             status=StatusRes.SUCCESS,
