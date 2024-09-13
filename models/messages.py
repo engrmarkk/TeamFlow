@@ -6,24 +6,24 @@ from .projects import Projects
 
 
 class Messages(db.Model):
-    __tablename__ = 'messages'
+    __tablename__ = "messages"
     id = db.Column(db.String(50), primary_key=True, default=gen_uuid)
     content = db.Column(db.Text, nullable=False)
     date_sent = db.Column(db.DateTime, default=datetime.now())
-    author_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=False)
-    project_id = db.Column(db.String(50), db.ForeignKey('projects.id'))
+    author_id = db.Column(db.String(50), db.ForeignKey("users.id"), nullable=False)
+    project_id = db.Column(db.String(50), db.ForeignKey("projects.id"))
 
     def to_dict(self, current_user_id=None):
         msgs = {
-            'id': self.id,
-            'content': self.content,
-            'date_sent': self.date_sent.strftime("%d %b, %Y"),
-            'author': f"{self.author.last_name.title()} {self.author.first_name.title()}",
-            'project_id': self.project_id,
+            "id": self.id,
+            "content": self.content,
+            "date_sent": self.date_sent.strftime("%d %b, %Y"),
+            "author": f"{self.author.last_name.title()} {self.author.first_name.title()}",
+            "project_id": self.project_id,
         }
 
         if current_user_id:
-            msgs['is_author'] = current_user_id == self.author_id
+            msgs["is_author"] = current_user_id == self.author_id
 
         return msgs
 
@@ -35,7 +35,7 @@ class Messages(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return '<Message %r>' % self.content
+        return "<Message %r>" % self.content
 
 
 def create_message(content, author_id, project_id):
@@ -46,8 +46,11 @@ def create_message(content, author_id, project_id):
 
 def get_messages(project_id, org_id):
     print("getting messages from db")
-    messages = Messages.query.join(Projects, Projects.organization_id == org_id).filter(
-        Messages.project_id == project_id
-    ).order_by(Messages.date_sent.asc()).all()
+    messages = (
+        Messages.query.join(Projects, Projects.organization_id == org_id)
+        .filter(Messages.project_id == project_id)
+        .order_by(Messages.date_sent.asc())
+        .all()
+    )
 
     return messages
