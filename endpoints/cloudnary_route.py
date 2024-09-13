@@ -24,9 +24,9 @@ def manage_file():
 
         print(data, "data")
 
-        cloud_name = os.environ.get("CLOUD_NAME"),
-        api_key = os.environ.get("API_KEY"),
-        api_secret = os.environ.get("API_SECRET"),
+        cloud_name = (os.environ.get("CLOUD_NAME"),)
+        api_key = (os.environ.get("API_KEY"),)
+        api_secret = (os.environ.get("API_SECRET"),)
 
         cloud_name = str(cloud_name[0]) if isinstance(cloud_name, tuple) else cloud_name
         api_key = str(api_key[0]) if isinstance(api_key, tuple) else api_key
@@ -62,17 +62,17 @@ def manage_file():
         print("file", file)
 
         params_to_sign = {
-            'public_id': public_id,
-            'timestamp': int(time.time()),
+            "public_id": public_id,
+            "timestamp": int(time.time()),
         }
         signature = generate_signature(params_to_sign, api_secret)
 
-        params_to_sign['signature'] = signature
+        params_to_sign["signature"] = signature
 
         print(signature, "signature from cloudinary")
         print(params_to_sign, "params_to_sign from cloudinary")
 
-        params_to_sign['folder'] = folder if folder else None
+        params_to_sign["folder"] = folder if folder else None
 
         if action == "upload":
             print(action, "action from cloudinary")
@@ -84,22 +84,32 @@ def manage_file():
                 HttpStatus.OK,
                 status=StatusRes.SUCCESS,
                 message="File uploaded successfully",
-                data={"file_url": file_url, "public_id": public_id, "signature": signature},
+                data={
+                    "file_url": file_url,
+                    "public_id": public_id,
+                    "signature": signature,
+                },
             )
         elif action == "destroy":
-            params_to_sign["public_id"] = f"{folder}/{public_id}" if folder else public_id
+            params_to_sign["public_id"] = (
+                f"{folder}/{public_id}" if folder else public_id
+            )
             result = cloudinary.uploader.destroy(**params_to_sign)
             print(params_to_sign, "pparams")
             print(result, "result from cloudinary destroy")
 
-            return return_response(
-                HttpStatus.OK,
-                status=StatusRes.SUCCESS,
-                message="File deleted successfully",
-            ) if result["result"] == "ok" else return_response(
-                HttpStatus.BAD_REQUEST,
-                status=StatusRes.FAILED,
-                message="File not found",
+            return (
+                return_response(
+                    HttpStatus.OK,
+                    status=StatusRes.SUCCESS,
+                    message="File deleted successfully",
+                )
+                if result["result"] == "ok"
+                else return_response(
+                    HttpStatus.BAD_REQUEST,
+                    status=StatusRes.FAILED,
+                    message="File not found",
+                )
             )
         else:
             return return_response(
