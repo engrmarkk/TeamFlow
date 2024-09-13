@@ -12,8 +12,8 @@ class Tasks(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(50), nullable=False, default="To Do")
-    project_id = db.Column(db.String(50), db.ForeignKey('projects.id'), nullable=False)
-    assignee_id = db.Column(db.String(50), db.ForeignKey('users.id'), nullable=True)
+    project_id = db.Column(db.String(50), db.ForeignKey("projects.id"), nullable=False)
+    assignee_id = db.Column(db.String(50), db.ForeignKey("users.id"), nullable=True)
     completed = db.Column(db.Boolean, default=False)
     completed_at = db.Column(db.DateTime, nullable=True)
     date_created = db.Column(db.DateTime, default=datetime.now())
@@ -21,64 +21,64 @@ class Tasks(db.Model):
 
     def to_dict(self):
         task = {
-            'id': self.id,
-            'title': self.title,
-            'description': self.description,
-            'status': self.status,
-            'project_id': self.project_id,
-            'assignee_id': self.assignee_id,
-            'project_details': {
-                'id': self.project.id,
-                'name': self.project.name,
-                'description': self.project.description,
-                'created_by': f"{self.project.users.first_name.title()} {self.project.users.last_name.title()}",
-                'date_created': self.project.date_created.strftime("%d %b, %Y")
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "status": self.status,
+            "project_id": self.project_id,
+            "assignee_id": self.assignee_id,
+            "project_details": {
+                "id": self.project.id,
+                "name": self.project.name,
+                "description": self.project.description,
+                "created_by": f"{self.project.users.first_name.title()} {self.project.users.last_name.title()}",
+                "date_created": self.project.date_created.strftime("%d %b, %Y"),
             },
-            'assigned_to': f"{self.assignee.last_name.title()} {self.assignee.first_name.title()}",
-            'date_created': self.date_created.strftime("%d %b, %Y"),
-            'due_date': self.due_date.strftime("%d %b, %Y"),
-            'completed': self.completed
+            "assigned_to": f"{self.assignee.last_name.title()} {self.assignee.first_name.title()}",
+            "date_created": self.date_created.strftime("%d %b, %Y"),
+            "due_date": self.due_date.strftime("%d %b, %Y"),
+            "completed": self.completed,
         }
 
         # add completed_at if completed
         if self.completed:
-            task['completed_at'] = self.completed_at.strftime("%d %b, %Y")
+            task["completed_at"] = self.completed_at.strftime("%d %b, %Y")
         return task
 
     def to_dict2(self):
         task = {
-            'id': self.id,
-            'title': self.title,
-            'description': self.description,
-            'status': self.status,
-            'project_id': self.project_id,
-            'assignee_id': self.assignee_id,
-            'assigned_to': f"{self.assignee.last_name.title()} {self.assignee.first_name.title()}",
-            'date_created': self.date_created.strftime("%d %b, %Y"),
-            'due_date': self.due_date.strftime("%d %b, %Y"),
-            'completed': self.completed
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "status": self.status,
+            "project_id": self.project_id,
+            "assignee_id": self.assignee_id,
+            "assigned_to": f"{self.assignee.last_name.title()} {self.assignee.first_name.title()}",
+            "date_created": self.date_created.strftime("%d %b, %Y"),
+            "due_date": self.due_date.strftime("%d %b, %Y"),
+            "completed": self.completed,
         }
 
         # add completed_at if completed
         if self.completed:
-            task['completed_at'] = self.completed_at.strftime("%d %b, %Y")
+            task["completed_at"] = self.completed_at.strftime("%d %b, %Y")
         return task
 
     def user_task_dict(self):
         task = {
-            'id': self.id,
-            'title': self.title,
-            'description': self.description,
-            'status': self.status,
-            'project_id': self.project_id,
-            'date_created': self.date_created.strftime("%d %b, %Y"),
-            'due_date': self.due_date.strftime("%d %b, %Y"),
-            'completed': self.completed
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "status": self.status,
+            "project_id": self.project_id,
+            "date_created": self.date_created.strftime("%d %b, %Y"),
+            "due_date": self.due_date.strftime("%d %b, %Y"),
+            "completed": self.completed,
         }
 
         # add completed_at if completed
         if self.completed:
-            task['completed_at'] = self.completed_at.strftime("%d %b, %Y")
+            task["completed_at"] = self.completed_at.strftime("%d %b, %Y")
         return task
 
     def save(self):
@@ -93,13 +93,19 @@ class Tasks(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return '<Tasks %r>' % self.title
+        return "<Tasks %r>" % self.title
 
 
 def create_task(title, description, status, project_id, assignee_id, due_date):
     try:
-        task = Tasks(title=title, description=description, status=status or "To Do", project_id=project_id,
-                     assignee_id=assignee_id, due_date=due_date)
+        task = Tasks(
+            title=title,
+            description=description,
+            status=status or "To Do",
+            project_id=project_id,
+            assignee_id=assignee_id,
+            due_date=due_date,
+        )
         task.save()
         return task
     except IntegrityError as e:
@@ -124,12 +130,16 @@ def update_task(task_id, title, description, status, project_id, assignee_id, du
 
 
 def get_task_for_project(project_id, status, start_date, end_date, page, per_page):
-    return (Tasks.query.filter(Tasks.project_id == project_id,
-                               Tasks.status == status if status else True,
-                               func.DATE(Tasks.date_created) >= start_date if start_date else True,
-                               func.DATE(Tasks.date_created) <= end_date if end_date else True).order_by(
-        Tasks.date_created.desc()).paginate(
-        page=page, per_page=per_page, error_out=False))
+    return (
+        Tasks.query.filter(
+            Tasks.project_id == project_id,
+            Tasks.status == status if status else True,
+            func.DATE(Tasks.date_created) >= start_date if start_date else True,
+            func.DATE(Tasks.date_created) <= end_date if end_date else True,
+        )
+        .order_by(Tasks.date_created.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
 
 
 # get a task by id
@@ -138,25 +148,35 @@ def get_task(task_id, project_id):
 
 
 def task_assigned_to_user(user_id):
-    tasks = Tasks.query.filter_by(assignee_id=user_id).order_by(
-        Tasks.date_created.desc()
-    ).limit(10).all()
+    tasks = (
+        Tasks.query.filter_by(assignee_id=user_id)
+        .order_by(Tasks.date_created.desc())
+        .limit(10)
+        .all()
+    )
     all_tasks = [task.to_dict() for task in tasks]
     return all_tasks
 
 
 def get_tasks_for_user(user_id, status, start_date, end_date, page, per_page):
-    return Tasks.query.filter(Tasks.assignee_id == user_id,
-                              func.lower(Tasks.status) == status.lower() if status else True,
-                              func.DATE(Tasks.date_created) >= start_date if start_date else True,
-                              func.DATE(Tasks.date_created) <= end_date if end_date else True).order_by(
-        Tasks.date_created.desc()).paginate(
-        page=page, per_page=per_page, error_out=False)
+    return (
+        Tasks.query.filter(
+            Tasks.assignee_id == user_id,
+            func.lower(Tasks.status) == status.lower() if status else True,
+            func.DATE(Tasks.date_created) >= start_date if start_date else True,
+            func.DATE(Tasks.date_created) <= end_date if end_date else True,
+        )
+        .order_by(Tasks.date_created.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
 
 
 def get_one_task(task_id, org_id):
-    task = Tasks.query.join(Projects, Tasks.project_id == Projects.id).filter(
-        Tasks.id == task_id, Projects.organization_id == org_id).first()
+    task = (
+        Tasks.query.join(Projects, Tasks.project_id == Projects.id)
+        .filter(Tasks.id == task_id, Projects.organization_id == org_id)
+        .first()
+    )
     if not task:
         return None
     return task
@@ -171,7 +191,17 @@ def get_users_tasks_for_project(project_id):
 def statistics(user_id):
     total_tasks = Tasks.query.filter_by(assignee_id=user_id).count()
     completed_tasks = Tasks.query.filter_by(assignee_id=user_id, completed=True).count()
-    not_started_tasks = Tasks.query.filter_by(assignee_id=user_id, status="To Do").count()
-    in_progress_tasks = Tasks.query.filter_by(assignee_id=user_id, status="In Progress").count()
+    not_started_tasks = Tasks.query.filter_by(
+        assignee_id=user_id, status="To Do"
+    ).count()
+    in_progress_tasks = Tasks.query.filter_by(
+        assignee_id=user_id, status="In Progress"
+    ).count()
     expired_tasks = Tasks.query.filter_by(assignee_id=user_id, status="Expired").count()
-    return total_tasks, completed_tasks, not_started_tasks, in_progress_tasks, expired_tasks
+    return (
+        total_tasks,
+        completed_tasks,
+        not_started_tasks,
+        in_progress_tasks,
+        expired_tasks,
+    )
