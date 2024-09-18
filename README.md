@@ -20,12 +20,12 @@ The TeamFlow API offers a wide range of features to support efficient team and p
 
 To begin using the TeamFlow API, follow these steps:
 
-1. **Create an Organization**: Send a `POST` request to the `/organizations` endpoint with the required information to create your organization.
-2. **Add Team Members**: Use the `/team-members` endpoint to add team members by sending a `POST` request with their details.
-3. **Create Projects**: Start a new project by sending a `POST` request to the `/projects` endpoint. Assign team members as needed.
-4. **Assign Tasks**: Allocate tasks within a project by sending a `POST` request to the `/tasks` endpoint with task details and the assigned team member.
-5. **Share Documents**: Convert base64 PDF files into Cloudinary links, then use the `/documents/<project_id>` endpoint to share them with the relevant team members.
-6. **Send Real-Time Messages**: Communicate with team members in real-time using the WebSocket-enabled `/messages/<project_id>` endpoint.
+1. **Create an Organization**: Send a `POST` request to the `/auth/register` endpoint with the required information to create your organization (Anyone who creates this account is automatically the super admin of that organization).
+2. **Add Team Members**: Use the `/account/create-user` endpoint to add team members by sending a `POST` request with their details.
+3. **Create Projects**: Start a new project by sending a `POST` request to the `/account/create-project` endpoint. Assign team members as needed.
+4. **Assign Tasks**: Allocate tasks within a project by sending a `POST` request to the `/account/create-task` endpoint with task details and the assigned team member.
+5. **Share Documents**: Convert base64 PDF files into Cloudinary links, then use the `/account/upload-documents/<project_id>` endpoint to share them with the relevant team members.
+6. **Send Real-Time Messages**: Communicate with team members in real-time using the WebSocket-enabled `send-message` connection.
 
 ## Running the Application Locally
 
@@ -65,22 +65,22 @@ To run the TeamFlow API locally using Docker:
 Below are the key endpoints available in the TeamFlow API:
 
 - **Organizations**:
-  - `POST /organizations`: Create a new organization.
+  - `POST /auth/register`: Create a new organization and super admin.
   
 - **Team Members**:
-  - `POST /team-members`: Add new team members.
+  - `POST /account/create-user`: Add new team members.
   
 - **Projects**:
-  - `POST /projects`: Create new projects.
+  - `POST /account/create-project`: Create new projects.
   
 - **Tasks**:
-  - `POST /tasks`: Assign tasks to team members.
+  - `POST /account/create-task`: Assign tasks to team members.
   
 - **Documents**:
-  - `POST /documents/<project_id>`: Share documents with team members.
+  - `POST /account/upload-documents/<project_id>`: Share documents with team members.
   
 - **Messages**:
-  - `POST /messages/<project_id>`: Send real-time messages.
+  - `WEBSOCKET send-message`: Send real-time messages.
 
 ## Running Tests
 
@@ -96,7 +96,7 @@ The TeamFlow API uses [pytest](https://docs.pytest.org/en/stable/) for testing i
    pytest
    ```
 
-   Note: Before running the tests, review the test files to comment out any sections of code as necessary.
+   Note: Before running the tests, review the test files to comment out any sections of code as necessary (as indicated in the py test file).
 
 ## Technologies Used
 
