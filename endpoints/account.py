@@ -21,7 +21,7 @@ from models import (
     get_one_task,
     get_messages,
     email_exist,
-    username_exist,
+    username_exist, get_user_task,
     create_otp,
     get_users_tasks_for_project,
     get_task,
@@ -50,6 +50,13 @@ ACCOUNT_PREFIX = "account"
 @email_verified_required
 def dashboard():
     try:
+        """
+        Get the user dashboard
+        - Get the user information
+        - Get the user role
+        - Get the tasks assigned to the user
+        - Get the statistics of the user tasks (the total tasks, completed tasks, not started tasks, in progress tasks, expired tasks)
+        """
         (
             total_tasks,
             completed_tasks,
@@ -93,6 +100,8 @@ def dashboard():
 @super_admin_required
 def get_all_users_endpoint():
     try:
+        # this is actually a super admin required endpoint
+        # only super admin can view all users in the organization
         page = int(request.args.get("page", 1))
         per_page = int(request.args.get("per_page", 10))
         users, total_items, total_pages = get_users_by_organization(
@@ -125,6 +134,10 @@ def get_all_users_endpoint():
 @super_admin_required
 def create_user_endpoint():
     try:
+        """
+        Create a new user
+        Only super admin has the permission to create a new user
+        """
         from celery_config.utils.cel_workers import send_mail
 
         data = request.get_json()
@@ -264,6 +277,7 @@ def get_user_details_endpoint():
 @super_admin_required
 def update_user_role_endpoint():
     try:
+        # only super admin can update user role to either admin or super admin or neither
         data = request.get_json()
         user_id = data.get("user_id")
         is_admin = data.get("is_admin", False)
@@ -636,6 +650,36 @@ def get_user_tasks_endpoint():
     except Exception as e:
         print(traceback.format_exc())
         print(e, "error@account/get-user-tasks")
+        return return_response(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            status=StatusRes.FAILED,
+            message="Network Error",
+        )
+
+
+# get all task for a user
+@account.route(f"/{ACCOUNT_PREFIX}/get-task/<user_id>", methods=["GET"])
+@jwt_required()
+@email_verified_required
+@super_admin_required
+def get_task_endpoint(user_id):
+    try:
+        tasks = get_user_task(user_id, current_user)
+        if tasks is None:
+            return return_response(
+                HttpStatus.BAD_REQUEST,
+                status=StatusRes.FAILED,
+                message="User not found",
+            )
+        return return_response(
+            HttpStatus.OK,
+            status=StatusRes.SUCCESS,
+            message="Tasks fetched successfully",
+            tasks=[task.user_task_dict() for task in tasks],
+        )
+
+    except Exception as e:
+        print(e, "error@account/get-task")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
             status=StatusRes.FAILED,
