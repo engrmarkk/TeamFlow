@@ -4,6 +4,7 @@ from utils import gen_uuid
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from .projects import Projects
+from .users import Users
 from sqlalchemy import func
 
 
@@ -205,3 +206,13 @@ def statistics(user_id):
         in_progress_tasks,
         expired_tasks,
     )
+
+
+def get_user_task(user_id, current_user):
+    user = Users.query.filter_by(
+        id=user_id,
+        organization_id=current_user.organization_id
+    ).first()
+    if not user:
+        return None
+    return Tasks.query.filter_by(assignee_id=user_id).all()
