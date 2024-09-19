@@ -11,7 +11,6 @@ from models import (
     authenticate,
     username_exist,
     email_exist,
-    email_exist,
     create_user,
     create_otp,
     get_user_by_email,
@@ -45,32 +44,36 @@ def login():
 
         print(email, password)
 
-        if not email or not password:
+        if not email or not password: # if email or password is not provided, throw a bad request error
             return return_response(
                 HttpStatus.BAD_REQUEST,
                 status=StatusRes.FAILED,
                 message="Email and Password are required",
             )
+        # authenticate the user, the functions checks if the user exists in the database and if the password is correct
         user = authenticate(email.lower(), password)
         if user:
-            if not user.email_verified:
+            if not user.email_verified: # if the user exists and the email is not verified, throw a forbidden error
                 return return_response(
                     HttpStatus.FORBIDDEN,
                     status=StatusRes.FAILED,
                     message="Email not verified",
                 )
+            # if the user exists and the email is verified, return a success response with the access token
             return return_response(
                 HttpStatus.OK,
                 status=StatusRes.SUCCESS,
                 message="Login Successful",
                 access_token=return_access_token(user),
             )
+        # if the user does not exist or the password is incorrect, throw a not found error
         return return_response(
             HttpStatus.NOT_FOUND,
             status=StatusRes.FAILED,
             message="Invalid Email or Password",
         )
     except Exception as e:
+        # if there is an error, throw an internal server error and log the error
         print(e, "error@auth/login")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -82,6 +85,7 @@ def login():
 @auth.route(f"/{AUTH_PREFIX}/register", methods=["POST"])
 def register():
     try:
+        # import the send_mail function from the celery_config.utils.cel_workers module
         from celery_config.utils.cel_workers import send_mail
 
         data = request.get_json()
@@ -93,6 +97,7 @@ def register():
         email = data.get("email")
         password = data.get("password")
 
+        # validation checks to make sure all the required fields are provided
         if not first_name:
             return return_response(
                 HttpStatus.BAD_REQUEST,
@@ -142,12 +147,15 @@ def register():
                 message="Organization Description is required",
             )
 
+        # convert all the fields to lowercase for uniformity
         username = username.lower()
         email = email.lower()
         first_name = first_name.lower()
         last_name = last_name.lower()
         organization_name = organization_name.lower()
 
+        # check if the email is in a valid format
+        # the function is imported above
         if not is_valid_email(email):
             return return_response(
                 HttpStatus.BAD_REQUEST,
@@ -155,12 +163,15 @@ def register():
                 message="Invalid Email Format",
             )
 
+        # check if the password is in a valid format
+        # if the password passed the validation checks, it returns None
         val_pass = validate_password(password)
         if val_pass:
             return return_response(
                 HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message=val_pass
             )
 
+        # check if the username already exists in the database
         if username_exist(username):
             return return_response(
                 HttpStatus.BAD_REQUEST,
@@ -168,6 +179,7 @@ def register():
                 message="Username already exists",
             )
 
+        # check if the email already exists in the database
         if email_exist(email):
             return return_response(
                 HttpStatus.BAD_REQUEST,
@@ -175,6 +187,8 @@ def register():
                 message="Email already exists",
             )
 
+        # check if the organization already exists in the database
+        # you cannot have two organizations with the same name
         if check_if_org_exist(organization_name):
             return return_response(
                 HttpStatus.BAD_REQUEST,
@@ -182,8 +196,11 @@ def register():
                 message="Organization already exists",
             )
 
+        # create the organization and return the organization id
         org_id = create_org(organization_name, organization_desc.lower())
 
+        # create the user with the provided details linking the user to the organization
+        # the creator of the account is automatically made a super admin of the organization
         user = create_user(
             first_name,
             last_name,
@@ -194,11 +211,14 @@ def register():
             is_super_admin=True,
             is_admin=True,
         )
+        # create an otp session for the user so as to verify the email, after that return the session instance
         usersession = create_otp(user.id)
+        # get the otp from the session instance
         otp = usersession.otp
         print(otp, "otp")
         # send mail to the user
 
+        # construct the payload to be sent to the send_mail function
         payload = {
             "email": email,
             "subject": "Welcome to TeamFlow",
@@ -208,6 +228,8 @@ def register():
             "date": datetime.now().strftime("%d-%b-%Y %H:%M:%S"),
         }
         print("Calling celery")
+
+        # this is where the celery task is being used to send the mail
         send_mail.delay(payload)
         return return_response(
             HttpStatus.OK,
@@ -257,19 +279,25 @@ def verify_email():
                 status=StatusRes.FAILED,
                 message="User not found",
             )
+
+        # check if the email has already been verified
         if user.email_verified:
             return return_response(
                 HttpStatus.BAD_REQUEST,
                 status=StatusRes.FAILED,
                 message="Email already verified",
             )
+
+        # check if the otp provided is correct
         if user.usersession.otp == otp:
+            # check if the otp has expired
             if user.usersession.otp_expiry < datetime.now():
                 return return_response(
                     HttpStatus.BAD_REQUEST,
                     status=StatusRes.FAILED,
                     message="OTP expired",
                 )
+            # if the otp is correct and has not expired, update the user's email_verified field to True
             user.email_verified = True
             user.update()
             return return_response(
@@ -277,6 +305,7 @@ def verify_email():
                 status=StatusRes.SUCCESS,
                 message="Email verified successfully",
             )
+        # if the otp is incorrect, throw a bad request error
         return return_response(
             HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message="Invalid OTP"
         )
@@ -293,6 +322,7 @@ def verify_email():
 @auth.route(f"/{AUTH_PREFIX}/resend-otp", methods=["POST"])
 def resend_otp():
     try:
+        # this endpoints resends the otp to the user's email, probably because the otp has expired
         from celery_config.utils.cel_workers import send_mail
 
         data = request.get_json()
