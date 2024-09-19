@@ -9,6 +9,7 @@ from .tasks import (
     get_users_tasks_for_project,
     statistics,
     get_tasks_for_user,
+    get_user_task
 )
 from .users import (
     Users,
