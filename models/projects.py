@@ -15,7 +15,7 @@ class Projects(db.Model):
         db.String(50), db.ForeignKey("organizations.id"), nullable=True
     )
     tasks = relationship("Tasks", backref="project", lazy=True, cascade="all, delete")
-    document = relationship("Documents", backref="project", lazy=True)
+    document = relationship("Documents", backref="project", lazy=True, cascade="all, delete")
 
     def to_dict(self):
         proj = {
