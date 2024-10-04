@@ -84,6 +84,7 @@ def dashboard():
             },
         )
     except Exception as e:
+        print(traceback.format_exc(), "error@account/dashboard traceback")
         print(e, "error@account/dashboard")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -119,6 +120,7 @@ def get_all_users_endpoint():
             per_page=per_page,
         )
     except Exception as e:
+        print(traceback.format_exc(), "error@account/users traceback")
         print(e, "error@account/users")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -249,6 +251,7 @@ def create_user_endpoint():
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/create-user traceback")
         print(e, "error@account/create-user")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -311,6 +314,7 @@ def update_user_role_endpoint():
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/update-user-role traceback")
         print(e, "error@account/update-user-role")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -351,6 +355,7 @@ def create_project_endpoint():
         )
 
     except IntegrityError as e:
+        print(traceback.format_exc(), "error@account/create-project traceback")
         print(e, "error@account/create-project")
         return return_response(
             HttpStatus.BAD_REQUEST,
@@ -396,6 +401,7 @@ def update_project_endpoint(project_id):
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/update-project traceback")
         print(e, "error@account/update-project")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -443,6 +449,7 @@ def get_projects_endpoint():
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/get-projects traceback")
         print(e, "error@account/get-projects")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -467,6 +474,7 @@ def get_users_endpoint():
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/get-users traceback")
         print(e, "error@account/get-users")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -557,6 +565,7 @@ def create_task_endpoint():
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/create-task traceback")
         print(e, "error@account/create-task")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -599,6 +608,7 @@ def get_tasks_endpoint(project_id):
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/get-tasks traceback")
         print(e, "error@account/get-tasks")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -639,7 +649,7 @@ def get_user_tasks_endpoint():
         )
 
     except ValueError as e:
-        print(traceback.format_exc())
+        print(traceback.format_exc(), "error@account/get-user-tasks traceback")
         print(e, "error@account/get-user-tasks")
         return return_response(
             HttpStatus.BAD_REQUEST,
@@ -679,6 +689,7 @@ def get_task_endpoint(user_id):
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/get-task traceback")
         print(e, "error@account/get-task")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -738,6 +749,7 @@ def update_task_endpoint(task_id):
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/update-task traceback")
         print(e, "error@account/update-task")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -766,6 +778,7 @@ def delete_task_endpoint(task_id):
             message="Task deleted successfully",
         )
     except Exception as e:
+        print(traceback.format_exc(), "error@account/delete-task traceback")
         print(e, "error@account/delete-task")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -794,6 +807,7 @@ def delete_project_endpoint(project_id):
             message="Project deleted successfully",
         )
     except Exception as e:
+        print(traceback.format_exc(), "error@account/delete-project traceback")
         print(e, "error@account/delete-project")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -863,6 +877,7 @@ def upload_documents_endpoint(project_id):
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/upload-documents traceback")
         print(e, "error@account/upload-documents")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -922,6 +937,7 @@ def change_password_endpoint():
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/change-password traceback")
         print(e, "error@account/change-password")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -946,6 +962,7 @@ def get_all_messages(project_id):
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@account/get_all_messages traceback")
         print(e, "error@account/get_all_messages")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -1002,6 +1019,7 @@ def send_message():
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@send-message traceback")
         print(e, "error@send-message")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
