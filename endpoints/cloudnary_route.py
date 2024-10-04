@@ -7,6 +7,7 @@ from http_status import HttpStatus
 from status_res import StatusRes
 import time
 import os
+import traceback
 
 cloudnary = Blueprint("cloudnary", __name__)
 
@@ -126,6 +127,7 @@ def manage_file():
             message="All fields are required",
         )
     except Exception as e:
+        print(traceback.format_exc(), "error from cloudinary exception")
         print(e, "error from cloudinary")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
