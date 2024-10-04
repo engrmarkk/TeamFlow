@@ -74,6 +74,7 @@ def login():
         )
     except Exception as e:
         # if there is an error, throw an internal server error and log the error
+        print(traceback.format_exc(), "error@auth/login TRACEBACK")
         print(e, "error@auth/login")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -238,6 +239,7 @@ def register():
             user_email=user.email,
         )
     except Exception as e:
+        print(traceback.format_exc(), "error@auth/register TRACEBACK")
         print(e, "error@auth/register")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -310,6 +312,7 @@ def verify_email():
             HttpStatus.BAD_REQUEST, status=StatusRes.FAILED, message="Invalid OTP"
         )
     except Exception as e:
+        print(traceback.format_exc(), "error@auth/verify-email TRACEBACK")
         print(e, "error@auth/verify-email")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -411,6 +414,7 @@ def reset_password():
             message="Password reset link sent successfully",
         )
     except Exception as e:
+        print(traceback.format_exc(), "error@auth/reset-password TRACEBACK")
         print(e, "error@auth/reset-password")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -468,6 +472,7 @@ def verify_reset_password():
         )
 
     except Exception as e:
+        print(traceback.format_exc(), "error@auth/verify-reset-password TRACEBACK")
         print(e, "error@auth/verify-reset-password")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
@@ -515,6 +520,7 @@ def resend_reset_password():
             message="Password reset link sent successfully",
         )
     except Exception as e:
+        print(traceback.format_exc(), "error@auth/resend-reset-password TRACEBACK")
         print(e, "error@auth/resend-reset-password")
         return return_response(
             HttpStatus.INTERNAL_SERVER_ERROR,
