@@ -6,10 +6,10 @@ uri = f"""postgresql://{os.environ.get('POSTGRES_USER')}:{os.environ.get('POSTGR
 
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
+    SECRET_KEY = os.environ.get("SECRET_KEY") or "hard to guess string"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # jtw config
-    JWT_SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
+    JWT_SECRET_KEY = os.environ.get("SECRET_KEY") or "hard to guess string"
     # expiring time
     JWT_ACCESS_TOKEN_EXPIRES = 3600
 
@@ -28,7 +28,4 @@ class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite://"
 
 
-config_obj = {
-    'development': DevelopmentConfig,
-    'testing': TestConfig
-}
+config_obj = {"development": DevelopmentConfig, "testing": TestConfig}
