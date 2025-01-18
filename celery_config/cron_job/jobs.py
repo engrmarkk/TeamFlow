@@ -7,7 +7,9 @@ from sqlalchemy import or_
 @shared_task
 def check_pending_tasks():
     print("Checking Pending Tasks")
-    tasks = Tasks.query.filter(or_(Tasks.status == "To Do", Tasks.status == "In Progress")).all()
+    tasks = Tasks.query.filter(
+        or_(Tasks.status == "To Do", Tasks.status == "In Progress")
+    ).all()
     for task in tasks:
         # check if task is 7 days or less to due date
         if 7 >= (task.due_date - datetime.now()).days >= 0:
@@ -43,7 +45,7 @@ def update_expired_tasks():
     # Filter tasks once, then check expiration in the loop
     tasks = Tasks.query.filter(
         or_(Tasks.status == "To Do", Tasks.status == "In Progress"),
-        Tasks.due_date < datetime.now()
+        Tasks.due_date < datetime.now(),
     ).all()
 
     for task in tasks:
