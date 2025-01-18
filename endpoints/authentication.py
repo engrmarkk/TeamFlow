@@ -44,7 +44,9 @@ def login():
 
         print(email, password)
 
-        if not email or not password: # if email or password is not provided, throw a bad request error
+        if (
+            not email or not password
+        ):  # if email or password is not provided, throw a bad request error
             return return_response(
                 HttpStatus.BAD_REQUEST,
                 status=StatusRes.FAILED,
@@ -53,7 +55,9 @@ def login():
         # authenticate the user, the functions checks if the user exists in the database and if the password is correct
         user = authenticate(email.lower(), password)
         if user:
-            if not user.email_verified: # if the user exists and the email is not verified, throw a forbidden error
+            if (
+                not user.email_verified
+            ):  # if the user exists and the email is not verified, throw a forbidden error
                 return return_response(
                     HttpStatus.FORBIDDEN,
                     status=StatusRes.FAILED,
