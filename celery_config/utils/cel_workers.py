@@ -40,36 +40,36 @@ celery = make_celery()
 def send_mail(context):
     try:
         print("Sending Mail")
-        smtp_host = 'smtp.gmail.com'
+        smtp_host = "smtp.gmail.com"
         smtp_port = 587
-        smtp_user = os.environ.get('EMAIL_USER')
-        smtp_password = os.environ.get('EMAIL_PASSWORD')
+        smtp_user = os.environ.get("EMAIL_USER")
+        smtp_password = os.environ.get("EMAIL_PASSWORD")
 
         server = smtplib.SMTP(smtp_host, smtp_port)
         server.starttls()
         server.login(smtp_user, smtp_password)
 
         from_email = "support@teamflow.com"
-        to_email = context['email']
-        subject = context['subject']
+        to_email = context["email"]
+        subject = context["subject"]
 
         # Construct the path to the HTML file within the templates folder
-        template_path = os.path.join(os.getcwd(), 'templates', context['template_name'])
+        template_path = os.path.join(os.getcwd(), "templates", context["template_name"])
 
         # Read the HTML file content
-        with open(template_path, 'r') as html_file:
+        with open(template_path, "r") as html_file:
             body = html_file.read()
 
         # send context inside the html file
         body = render_template_string(body, **context)
 
         msg = MIMEMultipart()
-        msg['From'] = from_email
-        msg['To'] = to_email
-        msg['Subject'] = subject
+        msg["From"] = from_email
+        msg["To"] = to_email
+        msg["Subject"] = subject
 
         # Change the MIME type to 'html'
-        msg.attach(MIMEText(body, 'html'))
+        msg.attach(MIMEText(body, "html"))
 
         server.sendmail(from_email, to_email, msg.as_string())
 
