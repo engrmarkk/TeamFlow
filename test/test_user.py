@@ -11,7 +11,7 @@ You have to comment out any celery import (send_mail function) in the code befor
 
 class UserTestCase(unittest.TestCase):
     def setUp(self):
-        self.app = create_app('testing')
+        self.app = create_app("testing")
         self.appctx = self.app.app_context()
         self.appctx.push()
         self.client = self.app.test_client()
@@ -26,10 +26,7 @@ class UserTestCase(unittest.TestCase):
         username = "john_bush"
         email = "john_bush@me.com"
         password = sha256.hash("Password@123")
-        org = Organizations(
-            name=organization_name,
-            description=organization_desc
-        )
+        org = Organizations(name=organization_name, description=organization_desc)
         user = Users(
             first_name=first_name,
             last_name=last_name,
@@ -38,8 +35,9 @@ class UserTestCase(unittest.TestCase):
             password=password,
             organization=org,
         )
-        user_session = UserSession(otp="123456",
-                                   otp_expiry=datetime.now() + timedelta(minutes=10), user=user)
+        user_session = UserSession(
+            otp="123456", otp_expiry=datetime.now() + timedelta(minutes=10), user=user
+        )
         db.session.add_all([org, user, user_session])
         db.session.commit()
 
@@ -58,10 +56,10 @@ class UserTestCase(unittest.TestCase):
             "email": "john_bush2@me.com",
             "password": "Password@123",
             "organization_name": "test_org2",
-            "organization_description": "test_org_desc2"
+            "organization_description": "test_org_desc2",
         }
 
-        response = self.client.post('/api/v1/auth/register', json=payload)
+        response = self.client.post("/api/v1/auth/register", json=payload)
         self.assertEqual(response.status_code, 201)
         user = Users.query.filter_by(email="john_bush2@me.com").first()
         self.assertEqual(user.email, payload["email"])
@@ -71,25 +69,19 @@ class UserTestCase(unittest.TestCase):
             "email": "john_bush@me.com",
             "otp": "123456",
         }
-        response = self.client.patch('/api/v1/auth/verify-email', json=payload)
+        response = self.client.patch("/api/v1/auth/verify-email", json=payload)
         self.assertEqual(response.status_code, 200)
 
-        payload = {
-            "email": "john_bush@me.com",
-            "password": "Password@123"
-        }
-        response2 = self.client.post('/api/v1/auth/login', json=payload)
+        payload = {"email": "john_bush@me.com", "password": "Password@123"}
+        response2 = self.client.post("/api/v1/auth/login", json=payload)
         print(response2, "login response")
         self.assertEqual(response2.status_code, 200)
         self.assertTrue(response2.json["access_token"].startswith("ey"))
 
     def test_login_user(self):
-        payload = {
-            "email": "john_bush@me.com",
-            "password": "Password@123"
-        }
+        payload = {"email": "john_bush@me.com", "password": "Password@123"}
         user = Users.query.filter_by(email="john_bush@me.com").first()
         user.email_verified = True
         db.session.commit()
-        response = self.client.post('/api/v1/auth/login', json=payload)
+        response = self.client.post("/api/v1/auth/login", json=payload)
         self.assertEqual(response.status_code, 200)
