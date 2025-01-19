@@ -27,11 +27,15 @@ def gen_uuid():
 
 
 def return_access_token(user):
-    return create_access_token(identity=user.id, expires_delta=datetime.timedelta(days=1))
+    return create_access_token(
+        identity=user.id, expires_delta=datetime.timedelta(days=1)
+    )
 
 
 def is_valid_email(email):
-    regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
+    regex = re.compile(
+        r"([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+"
+    )
     if re.fullmatch(regex, email):
         return True
     return False
@@ -57,7 +61,7 @@ def generate_otp():
 
 def generate_random_string(length=20):
     characters = string.ascii_letters + string.digits
-    random_string = ''.join(choice(characters) for _ in range(length))
+    random_string = "".join(choice(characters) for _ in range(length))
     return random_string
 
 
@@ -80,10 +84,14 @@ def convert_binary(base64_file):
 
 def generate_signature(params_to_sign, api_secret):
     try:
-        params_to_sign['timestamp'] = int(time.time())
-        sorted_params = '&'.join([f'{k}={params_to_sign[k]}' for k in sorted(params_to_sign)])
-        to_sign = f'{sorted_params}{api_secret}'
-        signature = hmac.new(api_secret.encode('utf-8'), to_sign.encode('utf-8'), hashlib.sha1).hexdigest()
+        params_to_sign["timestamp"] = int(time.time())
+        sorted_params = "&".join(
+            [f"{k}={params_to_sign[k]}" for k in sorted(params_to_sign)]
+        )
+        to_sign = f"{sorted_params}{api_secret}"
+        signature = hmac.new(
+            api_secret.encode("utf-8"), to_sign.encode("utf-8"), hashlib.sha1
+        ).hexdigest()
         print(signature, "signature from generate_signature")
         return signature
     except Exception as e:
