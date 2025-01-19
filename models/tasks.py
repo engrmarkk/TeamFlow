@@ -210,8 +210,7 @@ def statistics(user_id):
 
 def get_user_task(user_id, current_user):
     user = Users.query.filter_by(
-        id=user_id,
-        organization_id=current_user.organization_id
+        id=user_id, organization_id=current_user.organization_id
     ).first()
     if not user:
         return None
