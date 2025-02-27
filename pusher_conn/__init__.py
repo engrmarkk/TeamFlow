@@ -1,5 +1,8 @@
 import pusher
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 pusher_client = pusher.Pusher(
     app_id=os.environ.get("PUSHER_APP_ID"),
