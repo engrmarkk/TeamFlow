@@ -1,9 +1,25 @@
 from flask_socketio import emit, join_room
+from flask import request
 from models import create_message, is_project_valid
 from http_status import HttpStatus
 from status_res import StatusRes
 from extensions import socketio
-from flask_jwt_extended import current_user, jwt_required
+from flask_jwt_extended import decode_token
+from jwt import ExpiredSignatureError, InvalidTokenError
+
+
+# decode token
+def decode_bearer_token(token):
+    try:
+        decoded_token = decode_token(token)
+        user_id = decoded_token.get("sub")
+        return user_id
+    except ExpiredSignatureError:
+        print("Token has expired")
+        return None
+    except InvalidTokenError:
+        print("Invalid token")
+        return None
 
 
 @socketio.on("connect")
@@ -12,10 +28,34 @@ def test_connect_handler():
 
 
 @socketio.on("join-room")
-@jwt_required()
 def on_join(data):
+    token = request.args.get("token")
+    print("token", token)
+    if not token:
+        emit(
+            "error-message",
+            {
+                "status": HttpStatus.UNAUTHORIZED,
+                "status_res": StatusRes.FAILED,
+                "message": "Unauthorized",
+            },
+        )
+        return
+
+    user_id = decode_bearer_token(token)
+    print(user_id, "USER ID")
+    if not user_id:
+        print("Unauthorized, No user id")
+        emit(
+            "error-message",
+            {
+                "status": HttpStatus.UNAUTHORIZED,
+                "status_res": StatusRes.FAILED,
+                "message": "Unauthorized",
+            },
+        )
     project_id = data.get("project_id")
-    print(current_user.id, "current_user.id")
+    print(user_id, "current_user.id")
     if not is_project_valid(project_id):
         print("Invalid project ID")
         emit(
@@ -45,8 +85,33 @@ def error_handler(e):
 
 
 @socketio.on("send-message")
-@jwt_required()
 def send_message(data):
+    token = request.args.get("token")
+    print("token", token)
+    if not token:
+        emit(
+            "error-message",
+            {
+                "status": HttpStatus.UNAUTHORIZED,
+                "status_res": StatusRes.FAILED,
+                "message": "Unauthorized",
+            },
+        )
+        return
+
+    user_id = decode_bearer_token(token)
+    print(user_id, "USER ID")
+    if not user_id:
+        print("Unauthorized, No user id")
+        emit(
+            "error-message",
+            {
+                "status": HttpStatus.UNAUTHORIZED,
+                "status_res": StatusRes.FAILED,
+                "message": "Unauthorized",
+            },
+        )
+        return
     project_id = data.get("project_id")
     print(project_id, "project_id")
 
@@ -64,7 +129,7 @@ def send_message(data):
 
     try:
         content = data.get("content", None)
-        author_id = current_user.id
+        author_id = user_id
 
         if not content:
             emit(
