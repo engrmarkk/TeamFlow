@@ -1,0 +1,20 @@
+apiVersion: api/v1
+kind: Deployment
+metadata:
+  name: teamflow-redis
+  namespace: teamflow-namespace
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: teamflow-redis
+  template:
+    metadata:
+      labels:
+        app: teamflow-redis
+    spec:
+      containers:
+      - name: teamflow-redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379
