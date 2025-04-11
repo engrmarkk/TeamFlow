@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: teamflow-postgres
+    namespace: teamflow-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teamflow-postgres
+  template:
+    metadata:
+      labels:
+        app: teamflow-postgres
+    spec:
+      containers:
+      - name: teamflow-postgres
+        image: postgres:alpine
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - configMapRef:
+          name: my-configmap
+        - secretRef:
+          name: my-secret
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        readinessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-pvc
