@@ -1,6 +1,6 @@
 #!/bin/bash
 
-kubectl apply -f ./k8/api/ -f ./k8/redis/ -f ./k8/celery/ -f ./k8/ -n teamflow-namespace
+kubectl apply -f ./k8/api/ -f ./k8/redis/ -f ./k8/celery/ -f ./k8/postgres/ -f ./k8/ -n teamflow-namespace
 
 echo "Waiting for pods to be ready"
 # sleep for 10 seconds
