@@ -20,9 +20,9 @@ spec:
         - containerPort: 5432
         envFrom:
         - configMapRef:
-          name: my-configmap
+            name: teamflow-config
         - secretRef:
-          name: my-secret
+            name: teamflow-secret
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
