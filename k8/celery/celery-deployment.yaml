@@ -17,9 +17,7 @@ spec:
     spec:
       containers:
         - name: teamflow-celery
-          image: teamflow-celery
-          ports:
-            - containerPort: 7000
+          image: engrmarkk/teamflow-celery:latest
           envFrom:
             - configMapRef:
                 name: teamflow-config
