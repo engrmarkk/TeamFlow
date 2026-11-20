@@ -168,3 +168,4 @@ DS_Store
 configmap.yaml
 secret.yaml
 node_modules
+config.bat
